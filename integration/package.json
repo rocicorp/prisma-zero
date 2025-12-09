@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "prisma-zero:generate": "prisma-zero generate",
-    "pretest": "pnpm prisma-zero:generate",
-    "test": "pnpm build && vitest run"
+    "generate": "prisma generate",
+    "pretest": "pnpm generate",
+    "test": "pnpm build"
   },
   "dependencies": {
     "@rocicorp/zero": "0.24.3000000000",
@@ -19,5 +19,6 @@
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vitest": "^4.0.15"
-  }
+  },
+  "prettier": "@rocicorp/prettier-config"
 }

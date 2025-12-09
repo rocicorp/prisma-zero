@@ -5,7 +5,7 @@ export type Config = {
   prettier: boolean;
   resolvePrettierConfig: boolean;
   camelCase: boolean;
-  excludeTables?: string[]; 
+  excludeTables?: string[];
 };
 
 export type ZeroTypeMapping = {

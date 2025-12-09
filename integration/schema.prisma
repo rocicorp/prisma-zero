@@ -5,6 +5,7 @@ datasource db {
 generator zero {
   provider = "prisma-zero"
   output   = "./generated/zero"
+  prettier = true
 }
 
 model User {

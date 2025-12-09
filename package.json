@@ -11,7 +11,7 @@
     "check-format": "prettier --check .",
     "check-types": "tsc",
     "lint": "oxlint --type-aware --quiet",
-    "test": "vitest run --typecheck --coverage",
+    "test": "vitest run --typecheck --coverage && cd integration && pnpm test",
     "test:ui": "vitest --ui"
   },
   "bin": {
@@ -77,7 +77,9 @@
       "esbuild",
       "msw",
       "protobufjs",
-      "ssh2"
+      "ssh2",
+      "@prisma/engines",
+      "prisma"
     ]
   },
   "packageManager": "pnpm@10.18.3",

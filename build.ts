@@ -19,6 +19,7 @@ const main = async () => {
       'typescript',
       '@rocicorp/zero',
       'prisma',
+      '@prisma/generator-helper',
     ],
   });
 };
