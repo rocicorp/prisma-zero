@@ -127,3 +127,8 @@ generator zero {
   excludeTables = ["Posts", "Comments", ...]
 }
 ```
+
+## Attribution
+
+Thank you to [@elledienne](https://github.com/elledienne) who built [@passionfroot/prisma-generator-zero](https://github.com/Passionfroot/prisma-generator-zero),
+which this is heavily based on.
