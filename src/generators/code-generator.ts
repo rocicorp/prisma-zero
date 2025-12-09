@@ -13,7 +13,7 @@ function generateImports(schema: TransformedSchema): string {
   usedImports.add('table');
   usedImports.add('createSchema');
   usedImports.add('createBuilder');
-  // usedImports.add('createCRUDBuilder');
+  usedImports.add('createCRUDBuilder');
 
   // Check which type functions are used in the schema
   schema.models.forEach(model => {
@@ -203,12 +203,12 @@ function generateSchema(schema: TransformedSchema): string {
   output += ' */\n';
   output += 'export const builder = zql;\n';
 
-  // output += '/**\n';
-  // output += ' * Represents the Zero schema CRUD builder.\n';
-  // output +=
-  //   ' * This type is auto-generated from your Prisma schema definition.\n';
-  // output += ' */\n';
-  // output += 'export const crud = createCRUDBuilder(schema);\n';
+  output += '/**\n';
+  output += ' * Represents the Zero schema CRUD builder.\n';
+  output +=
+    ' * This type is auto-generated from your Prisma schema definition.\n';
+  output += ' */\n';
+  output += 'export const crud = createCRUDBuilder(schema);\n';
 
   output += '/** Defines the default types for Zero */\n';
   output += 'declare module "@rocicorp/zero" {\n';
