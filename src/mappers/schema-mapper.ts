@@ -264,12 +264,9 @@ function mapModel(
   }
 
   const tableName = getTableNameFromModel(model);
-  const camelCasedName = config?.camelCase
-    ? toCamelCase(tableName)
-    : tableName;
+  const camelCasedName = config?.camelCase ? toCamelCase(tableName) : tableName;
 
-  const shouldRemap =
-    config.camelCase && camelCasedName !== tableName;
+  const shouldRemap = config.camelCase && camelCasedName !== tableName;
 
   return {
     tableName: shouldRemap ? camelCasedName : tableName,

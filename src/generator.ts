@@ -1,8 +1,7 @@
-import {
-  type GeneratorConfig,
-  generatorHandler,
-  type GeneratorOptions,
-} from '@prisma/generator-helper';
+import generatorHelper from '@prisma/generator-helper';
+import type {GeneratorConfig, GeneratorOptions} from '@prisma/generator-helper';
+
+const {generatorHandler} = generatorHelper;
 import {mkdir, writeFile} from 'fs/promises';
 import {join} from 'path';
 import {version} from '../package.json';
@@ -24,7 +23,7 @@ export async function onGenerate(options: GeneratorOptions) {
     prettier: generator.config.prettier === 'true', // Default false,
     resolvePrettierConfig: generator.config.resolvePrettierConfig !== 'false', // Default true
     camelCase: generator.config.camelCase === 'true', // Default false
-    excludeTables: loadExcludeTables(generator), 
+    excludeTables: loadExcludeTables(generator),
   } satisfies Config;
 
   // Transform the schema
