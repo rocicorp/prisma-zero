@@ -1,0 +1,23 @@
+{
+  "name": "integration-tests",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "prisma-zero:generate": "prisma-zero generate",
+    "pretest": "pnpm prisma-zero:generate",
+    "test": "pnpm build && vitest run"
+  },
+  "dependencies": {
+    "@rocicorp/zero": "0.24.3000000000",
+    "prisma-zero": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "prisma": "^7.1.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.15"
+  }
+}
