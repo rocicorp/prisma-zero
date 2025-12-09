@@ -1,6 +1,6 @@
 {
   "name": "prisma-zero",
-  "version": "0.1.0-canary.0",
+  "version": "0.1.0-canary.1",
   "description": "Generate Zero schemas from Prisma ORM schemas",
   "type": "module",
   "scripts": {
