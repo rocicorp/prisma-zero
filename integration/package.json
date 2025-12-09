@@ -6,6 +6,7 @@
   "scripts": {
     "build": "tsc",
     "generate": "prisma generate",
+    "postinstall": "pnpm generate",
     "pretest": "pnpm generate",
     "test": "pnpm build"
   },
