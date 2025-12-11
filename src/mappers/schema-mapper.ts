@@ -159,7 +159,10 @@ function mapRelationships(
       }
 
       const backReference = targetModel.fields.find(
-        f => f.relationName === field.relationName && f.type === model.name,
+        f =>
+          f.relationName === field.relationName &&
+          f.type === model.name &&
+          f.name !== field.name, // Exclude current field for self-referential relations
       );
 
       if (field.isList) {
@@ -304,7 +307,10 @@ export function transformSchema(
         if (config.excludeTables?.includes(targetModel.name)) return null;
 
         const backReference = targetModel.fields.find(
-          f => f.relationName === field.relationName && f.type === model.name,
+          f =>
+            f.relationName === field.relationName &&
+            f.type === model.name &&
+            f.name !== field.name, // Exclude current field for self-referential relations
         );
 
         if (backReference?.isList) {
