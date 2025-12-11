@@ -4,7 +4,6 @@
 import {
   boolean,
   createBuilder,
-  createCRUDBuilder,
   createSchema,
   enumeration,
   json,
@@ -580,11 +579,6 @@ export const zql = createBuilder(schema);
  * @deprecated Use `zql` instead.
  */
 export const builder = zql;
-/**
- * Represents the Zero schema CRUD builder.
- * This type is auto-generated from your Prisma schema definition.
- */
-export const crud = createCRUDBuilder(schema);
 /** Defines the default types for Zero */
 declare module '@rocicorp/zero' {
   interface DefaultTypes {
