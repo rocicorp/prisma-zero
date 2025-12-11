@@ -421,11 +421,11 @@ export const socialUserTableRelationships = relationships(
     blockedBy: many(
       {
         sourceField: ['id'],
-        destField: ['A'],
+        destField: ['B'],
         destSchema: _blockListTable,
       },
       {
-        sourceField: ['B'],
+        sourceField: ['A'],
         destField: ['id'],
         destSchema: socialUserTable,
       },

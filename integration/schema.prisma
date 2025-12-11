@@ -62,12 +62,12 @@ model OptionalTypes {
 
 /// TEST: Array types → json<T[]>() since Zero doesn't support native arrays
 model ArrayTypes {
-  id          String   @id @default(uuid())
-  strings     String[]
-  ints        Int[]
-  bools       Boolean[]
-  enums       Role[]
-  jsonArray   Json[]
+  id        String    @id @default(uuid())
+  strings   String[]
+  ints      Int[]
+  bools     Boolean[]
+  enums     Role[]
+  jsonArray Json[]
 }
 
 // ============================================================================
@@ -91,7 +91,7 @@ model TableMapping {
 
 /// TEST: Combined field + table mapping
 model CombinedMapping {
-  id        String @id @default(uuid())
+  id        String   @id @default(uuid())
   createdAt DateTime @map("created_at")
 
   @@map("combined_mappings")
@@ -124,10 +124,10 @@ model User {
 
 /// TEST: One-to-one relationship (belongs to side with FK)
 model Profile {
-  id     String @id @default(uuid())
+  id     String  @id @default(uuid())
   bio    String?
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id])
+  userId String  @unique
+  user   User    @relation(fields: [userId], references: [id])
 }
 
 // ============================================================================
@@ -226,7 +226,7 @@ model SocialUser {
 
 /// TEST: Parent with composite PK for FK reference
 model Tenant {
-  id     String @id @default(uuid())
+  id     String        @id @default(uuid())
   name   String
   config TenantConfig?
 }

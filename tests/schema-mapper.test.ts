@@ -104,10 +104,10 @@ describe('Schema Mapper', () => {
       const userModel = result.models.find(m => m.tableName === 'User');
       expect(userModel).toBeDefined();
       if (userModel) {
-        // Verify that the posts relationship field is not included
-        expect(userModel.relationships).not.toHaveProperty('posts');
-        // Verify that the profile relationship field is still included
-        expect(userModel.relationships).toHaveProperty('profile');
+      // Verify that the posts relationship field is not included
+      expect(userModel.relationships).not.toHaveProperty('posts');
+      // Verify that the profile relationship field is still included
+      expect(userModel.relationships).toHaveProperty('profile');
       }
     });
   });
@@ -331,6 +331,48 @@ describe('Schema Mapper', () => {
         expect(childrenRelationship).toHaveProperty('destField');
         expect(childrenRelationship).toHaveProperty('destSchema');
       }
+    });
+
+    it('maps self-referential implicit many-to-many relationships to distinct join columns', () => {
+      const socialUserModel = createModel('SocialUser', [
+        createField('id', 'String', {isId: true}),
+        createField('blocked', 'SocialUser', {
+          isList: true,
+          relationName: 'BlockList',
+          kind: 'object',
+        }),
+        createField('blockedBy', 'SocialUser', {
+          isList: true,
+          relationName: 'BlockList',
+          kind: 'object',
+        }),
+      ]);
+
+      const dmmf = createMockDMMF([socialUserModel]);
+      const result = transformSchema(dmmf, baseConfig);
+
+      const socialUser = result.models.find(m => m.modelName === 'SocialUser');
+      expect(socialUser).toBeDefined();
+      if (!socialUser) {
+        throw new Error('SocialUser model not found');
+      }
+
+      const blocked = socialUser.relationships.blocked;
+      const blockedBy = socialUser.relationships.blockedBy;
+
+      if (!blocked || !blockedBy) {
+        throw new Error('Expected SocialUser to have both relationship fields');
+      }
+
+      if (!('chain' in blocked) || !('chain' in blockedBy)) {
+        throw new Error('Expected chained many-to-many relationships');
+      }
+
+      expect(blocked.chain[0]?.destField).toEqual(['A']);
+      expect(blocked.chain[1]?.sourceField).toEqual(['B']);
+
+      expect(blockedBy.chain[0]?.destField).toEqual(['B']);
+      expect(blockedBy.chain[1]?.sourceField).toEqual(['A']);
     });
   });
 

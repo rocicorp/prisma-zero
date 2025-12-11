@@ -182,7 +182,12 @@ function mapRelationships(
               `Implicit relation ${field.name}: Model ${model.name} or ${targetModel.name} not found.`,
             );
           }
-          const isModelA = model.name === modelA.name;
+          const isSelfReferential = model.name === targetModel.name;
+          const isModelA = isSelfReferential
+            ? backReference
+              ? field.name.localeCompare(backReference.name) < 0
+              : true
+            : model.name === modelA.name;
 
           // Create a chained relationship through the join table
           relationships[field.name] = {

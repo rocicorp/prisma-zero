@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "generate": "prisma generate",
+    "generate": "prisma generate && pnpm migrate",
+    "migrate": "pnpm prisma migrate diff --from-empty --to-schema schema.prisma --script > generated/migration.sql",
     "pretest": "pnpm generate",
     "test": "pnpm build"
   },
