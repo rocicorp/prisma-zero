@@ -174,7 +174,7 @@ describe('Generator', () => {
           createBuilder,
           createCRUDBuilder,
           createSchema,
-          enumeration<Role>,
+          enumeration,
           string,
           table,
         } from "@rocicorp/zero";
@@ -708,9 +708,7 @@ describe('Generator', () => {
           createBuilder,
           createCRUDBuilder,
           createSchema,
-          json<any[]>,
-          json<number[]>,
-          json<string[]>,
+          json,
           string,
           table,
         } from "@rocicorp/zero";
@@ -798,7 +796,7 @@ describe('Generator', () => {
           createBuilder,
           createCRUDBuilder,
           createSchema,
-          json<Status[]>,
+          json,
           string,
           table,
         } from "@rocicorp/zero";

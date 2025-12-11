@@ -309,7 +309,14 @@ export function transformSchema(
 
         if (backReference?.isList) {
           // Only create the join table once for each relationship
-          if (model.name.localeCompare(targetModel.name) < 0) {
+          // For self-referential relations (model === targetModel), use field name comparison
+          // For different models, use model name comparison
+          const isSelfReferential = model.name === targetModel.name;
+          const shouldCreate = isSelfReferential
+            ? field.name.localeCompare(backReference.name) < 0
+            : model.name.localeCompare(targetModel.name) < 0;
+
+          if (shouldCreate) {
             return createImplicitManyToManyModel(
               model,
               targetModel,

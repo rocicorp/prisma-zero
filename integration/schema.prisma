@@ -3,24 +3,989 @@ datasource db {
 }
 
 generator zero {
-  provider = "prisma-zero"
-  output   = "./generated/zero"
-  prettier = true
+  provider      = "prisma-zero"
+  output        = "./generated/zero"
+  prettier      = true
+  camelCase     = true
+  excludeTables = ["IgnoredModel", "InternalAuditLog"]
 }
 
-model User {
+// ============================================================================
+// ENUMS - All enum variations
+// ============================================================================
+
+/// Basic enum
+enum Role {
+  USER
+  ADMIN
+  MODERATOR
+  SUPER_ADMIN
+}
+
+/// Enum with database name mapping
+enum Status {
+  PENDING   @map("pending")
+  ACTIVE    @map("active")
+  INACTIVE  @map("inactive")
+  ARCHIVED  @map("archived")
+  DELETED   @map("deleted")
+}
+
+/// Enum for order status
+enum OrderStatus {
+  DRAFT
+  SUBMITTED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+/// Enum for priority levels
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+/// Enum for notification types
+enum NotificationType {
+  EMAIL
+  SMS
+  PUSH
+  IN_APP
+  WEBHOOK
+}
+
+// ============================================================================
+// MODELS WITH ALL SCALAR TYPES
+// ============================================================================
+
+/// Model demonstrating ALL scalar types available in Prisma
+model AllScalarTypes {
+  id        String   @id @default(uuid())
+
+  // Basic types
+  stringField    String
+  intField       Int
+  floatField     Float
+  booleanField   Boolean
+  dateTimeField  DateTime
+  jsonField      Json
+  bigIntField    BigInt
+  decimalField   Decimal
+  bytesField     Bytes
+
+  // Optional versions of all types
+  optionalString    String?
+  optionalInt       Int?
+  optionalFloat     Float?
+  optionalBoolean   Boolean?
+  optionalDateTime  DateTime?
+  optionalJson      Json?
+  optionalBigInt    BigInt?
+  optionalDecimal   Decimal?
+  optionalBytes     Bytes?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// Model demonstrating ALL array types
+model AllArrayTypes {
+  id String @id @default(uuid())
+
+  // Array types (PostgreSQL supports these natively)
+  stringArray   String[]
+  intArray      Int[]
+  floatArray    Float[]
+  booleanArray  Boolean[]
+  dateTimeArray DateTime[]
+  jsonArray     Json[]
+  bigIntArray   BigInt[]
+  decimalArray  Decimal[]
+  bytesArray    Bytes[]
+
+  // Enum arrays
+  roles              Role[]
+  statuses           Status[]
+  notificationTypes  NotificationType[]
+
+  createdAt DateTime @default(now())
+}
+
+// ============================================================================
+// MODELS WITH VARIOUS DEFAULT VALUES
+// ============================================================================
+
+/// Model demonstrating all @default variations
+model DefaultValues {
+  // UUID default (most common)
+  id String @id @default(uuid())
+
+  // Auto-increment (for Int IDs)
+  sequenceNum Int @unique @default(autoincrement())
+
+  // CUID default
+  cuidField String @unique @default(cuid())
+
+  // Static defaults
+  defaultString  String  @default("default_value")
+  defaultInt     Int     @default(0)
+  defaultFloat   Float   @default(0.0)
+  defaultBool    Boolean @default(false)
+  defaultTrue    Boolean @default(true)
+
+  // Database-generated defaults
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Enum with default
+  status Status @default(PENDING)
+  role   Role   @default(USER)
+
+  // JSON with default
+  metadata Json @default("{}")
+  settings Json @default("{\"theme\": \"dark\", \"notifications\": true}")
+
+  // Array with default
+  tags String[] @default([])
+}
+
+// ============================================================================
+// FIELD MAPPING WITH @map
+// ============================================================================
+
+/// Model demonstrating field name mapping
+model FieldMapping {
+  id String @id @default(uuid())
+
+  // Simple snake_case to camelCase mapping
+  firstName   String @map("first_name")
+  lastName    String @map("last_name")
+  emailAddr   String @map("email_address") @unique
+  phoneNumber String @map("phone_number")
+
+  // Mapping with different naming conventions
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  // Boolean with mapping
+  isActive    Boolean @default(true) @map("is_active")
+  isVerified  Boolean @default(false) @map("is_verified")
+
+  // Foreign key with mapping
+  organizationId String @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id])
+}
+
+// ============================================================================
+// TABLE MAPPING WITH @@map
+// ============================================================================
+
+/// Model with table name mapping
+model UserAccount {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  email     String   @unique
+  createdAt DateTime @default(now())
+
+  profile   UserProfile?
+  sessions  UserSession[]
+
+  @@map("user_accounts")
+}
+
+/// Another model with table mapping
+model UserProfile {
+  id        String  @id @default(uuid())
+  bio       String?
+  avatarUrl String? @map("avatar_url")
+  website   String?
+
+  userId String      @unique @map("user_id")
+  user   UserAccount @relation(fields: [userId], references: [id])
+
+  @@map("user_profiles")
+}
+
+/// Session model with mapping
+model UserSession {
+  id           String   @id @default(uuid())
+  token        String   @unique
+  userAgent    String?  @map("user_agent")
+  ipAddress    String?  @map("ip_address")
+  lastActiveAt DateTime @map("last_active_at")
+  expiresAt    DateTime @map("expires_at")
+
+  userId String      @map("user_id")
+  user   UserAccount @relation(fields: [userId], references: [id])
+
+  @@map("user_sessions")
+}
+
+// ============================================================================
+// COMPOSITE PRIMARY KEYS (@@id)
+// ============================================================================
+
+/// Model with composite primary key
+model TenantUser {
+  tenantId  String
+  userId    String
+  role      Role     @default(USER)
+  joinedAt  DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@id([tenantId, userId])
+}
+
+/// Another composite key model - for API keys scoped to tenant
+model TenantApiKey {
+  tenantId    String
+  keyId       String
+  name        String
+  hashedKey   String   @map("hashed_key")
+  permissions String[]
+  expiresAt   DateTime? @map("expires_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@id([tenantId, keyId])
+  @@map("tenant_api_keys")
+}
+
+/// Tenant model
+model Tenant {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+
+  users   TenantUser[]
+  apiKeys TenantApiKey[]
+}
+
+// ============================================================================
+// COMPOSITE UNIQUE CONSTRAINTS (@@unique)
+// ============================================================================
+
+/// Model with various unique constraints
+model UniqueConstraints {
+  id String @id @default(uuid())
+
+  // Single field unique
+  email    String @unique
+  username String @unique
+
+  // Fields for composite unique
+  orgId      String @map("org_id")
+  employeeId String @map("employee_id")
+
+  // Additional fields
+  firstName String @map("first_name")
+  lastName  String @map("last_name")
+
+  @@unique([orgId, employeeId])
+  @@unique([orgId, email])
+  @@map("unique_constraints")
+}
+
+// ============================================================================
+// INDEXES (@@index)
+// ============================================================================
+
+/// Model demonstrating various index types
+model IndexedModel {
+  id String @id @default(uuid())
+
+  // Frequently queried fields
+  email     String
+  status    Status
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Foreign keys
+  categoryId String @map("category_id")
+  authorId   String @map("author_id")
+
+  // Text search fields
+  title   String
+  content String?
+
+  // Single column indexes
+  @@index([email])
+  @@index([status])
+  @@index([createdAt])
+
+  // Composite indexes
+  @@index([categoryId, status])
+  @@index([authorId, createdAt])
+  @@index([status, createdAt])
+
+  @@map("indexed_models")
+}
+
+// ============================================================================
+// ONE-TO-ONE RELATIONSHIPS
+// ============================================================================
+
+/// Person model for 1:1 relationship
+model Person {
   id        String   @id @default(uuid())
   email     String   @unique
   name      String
   createdAt DateTime @default(now())
-  posts     Post[]
+
+  // One-to-one: Person has one Passport
+  passport Passport?
+
+  // One-to-one: Person has one DriverLicense
+  driverLicense DriverLicense?
+
+  // One-to-one with same table (spouse)
+  spouseId String?  @unique
+  spouse   Person?  @relation("Spouse", fields: [spouseId], references: [id])
+  spouseOf Person?  @relation("Spouse")
 }
 
-model Post {
+/// Passport - required one-to-one
+model Passport {
+  id             String   @id @default(uuid())
+  passportNumber String   @unique @map("passport_number")
+  country        String
+  expiryDate     DateTime @map("expiry_date")
+
+  personId String @unique @map("person_id")
+  person   Person @relation(fields: [personId], references: [id])
+}
+
+/// DriverLicense - optional one-to-one
+model DriverLicense {
+  id            String    @id @default(uuid())
+  licenseNumber String    @unique @map("license_number")
+  state         String
+  expiryDate    DateTime  @map("expiry_date")
+  class         String    @default("C")
+
+  personId String @unique @map("person_id")
+  person   Person @relation(fields: [personId], references: [id])
+
+  @@map("driver_licenses")
+}
+
+// ============================================================================
+// ONE-TO-MANY RELATIONSHIPS
+// ============================================================================
+
+/// Organization for 1:N relationships
+model Organization {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  description String?
+  website     String?
+  createdAt   DateTime @default(now())
+
+  // One org has many departments
+  departments Department[]
+
+  // One org has many employees
+  employees Employee[]
+
+  // One org has many projects
+  projects Project[]
+
+  // Field mappings from other models
+  fieldMappings FieldMapping[]
+}
+
+/// Department belongs to Organization
+model Department {
+  id          String   @id @default(uuid())
+  name        String
+  code        String
+  description String?
+  budget      Decimal?
+
+  organizationId String       @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  // One department has many employees
+  employees Employee[]
+
+  // One department has many teams
+  teams Team[]
+
+  @@unique([organizationId, code])
+}
+
+/// Employee belongs to Organization and Department
+model Employee {
+  id         String   @id @default(uuid())
+  employeeNo String   @unique @map("employee_no")
+  firstName  String   @map("first_name")
+  lastName   String   @map("last_name")
+  email      String   @unique
+  title      String?
+  salary     Decimal?
+  hireDate   DateTime @map("hire_date")
+
+  organizationId String       @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  departmentId String?     @map("department_id")
+  department   Department? @relation(fields: [departmentId], references: [id])
+
+  // Employee can manage a team
+  managedTeam Team? @relation("TeamManager")
+
+  // Employee belongs to teams
+  teamMemberships TeamMember[]
+
+  // Employee has assigned tasks
+  assignedTasks Task[] @relation("TaskAssignee")
+
+  // Employee created tasks
+  createdTasks Task[] @relation("TaskCreator")
+}
+
+/// Team belongs to Department
+model Team {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+
+  departmentId String     @map("department_id")
+  department   Department @relation(fields: [departmentId], references: [id])
+
+  // Team has one manager (Employee)
+  managerId String?   @unique @map("manager_id")
+  manager   Employee? @relation("TeamManager", fields: [managerId], references: [id])
+
+  // Team has many members through TeamMember
+  members TeamMember[]
+}
+
+/// Junction table for Team-Employee (explicit many-to-many with extra fields)
+model TeamMember {
+  id       String   @id @default(uuid())
+  role     String   @default("member")
+  joinedAt DateTime @default(now()) @map("joined_at")
+
+  teamId String @map("team_id")
+  team   Team   @relation(fields: [teamId], references: [id])
+
+  employeeId String   @map("employee_id")
+  employee   Employee @relation(fields: [employeeId], references: [id])
+
+  @@unique([teamId, employeeId])
+  @@map("team_members")
+}
+
+// ============================================================================
+// MANY-TO-MANY RELATIONSHIPS (IMPLICIT)
+// ============================================================================
+
+/// Project with implicit M:N to Tag
+model Project {
+  id          String      @id @default(uuid())
+  name        String
+  description String?
+  status      Status      @default(PENDING)
+  priority    Priority    @default(MEDIUM)
+  startDate   DateTime?   @map("start_date")
+  endDate     DateTime?   @map("end_date")
+  budget      Decimal?
+  createdAt   DateTime    @default(now())
+
+  organizationId String       @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  // Implicit many-to-many with Tag
+  tags Tag[]
+
+  // Project has many tasks
+  tasks Task[]
+
+  // Implicit many-to-many with Skill (skills required for project)
+  requiredSkills Skill[] @relation("ProjectSkills")
+}
+
+/// Tag with implicit M:N to Project
+model Tag {
   id        String   @id @default(uuid())
+  name      String   @unique
+  color     String   @default("#808080")
+  createdAt DateTime @default(now())
+
+  // Implicit many-to-many with Project
+  projects Project[]
+
+  // Implicit many-to-many with Article
+  articles Article[]
+}
+
+/// Article with implicit M:N to Tag and Category
+model Article {
+  id          String   @id @default(uuid())
+  title       String
+  slug        String   @unique
+  content     String
+  excerpt     String?
+  publishedAt DateTime? @map("published_at")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Many-to-many with Tag (implicit)
+  tags Tag[]
+
+  // Many-to-many with Category (implicit)
+  categories Category[]
+
+  // Article has many comments
+  comments Comment[]
+}
+
+/// Category with implicit M:N to Article
+model Category {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  description String?
+
+  // Self-referential: parent category
+  parentId String?    @map("parent_id")
+  parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryHierarchy")
+
+  // Many-to-many with Article (implicit)
+  articles Article[]
+}
+
+// ============================================================================
+// MANY-TO-MANY RELATIONSHIPS (EXPLICIT WITH EXTRA DATA)
+// ============================================================================
+
+/// Skill model
+model Skill {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  category    String?
+
+  // Explicit M:N with Worker through WorkerSkill
+  workers WorkerSkill[]
+
+  // Implicit M:N with Project
+  projects Project[] @relation("ProjectSkills")
+}
+
+/// Worker model
+model Worker {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  hourlyRate Decimal @map("hourly_rate")
+
+  // Explicit M:N with Skill through WorkerSkill
+  skills WorkerSkill[]
+}
+
+/// Junction table with extra data (proficiency level, years of experience)
+model WorkerSkill {
+  id              String   @id @default(uuid())
+  proficiency     Int      @default(1) // 1-5 scale
+  yearsExperience Int      @default(0) @map("years_experience")
+  certified       Boolean  @default(false)
+  certifiedAt     DateTime? @map("certified_at")
+
+  workerId String @map("worker_id")
+  worker   Worker @relation(fields: [workerId], references: [id])
+
+  skillId String @map("skill_id")
+  skill   Skill  @relation(fields: [skillId], references: [id])
+
+  @@unique([workerId, skillId])
+  @@map("worker_skills")
+}
+
+// ============================================================================
+// SELF-REFERENTIAL RELATIONSHIPS
+// ============================================================================
+
+/// Comment with self-referential replies
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Comment belongs to Article
+  articleId String  @map("article_id")
+  article   Article @relation(fields: [articleId], references: [id])
+
+  // Self-referential: parent comment (for replies)
+  parentId String?   @map("parent_id")
+  parent   Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies  Comment[] @relation("CommentReplies")
+}
+
+/// Tree node with self-referential parent/children
+model TreeNode {
+  id        String   @id @default(uuid())
+  name      String
+  level     Int      @default(0)
+  path      String   // Materialized path like "/1/2/3"
+  createdAt DateTime @default(now())
+
+  parentId String?     @map("parent_id")
+  parent   TreeNode?   @relation("TreeHierarchy", fields: [parentId], references: [id])
+  children TreeNode[]  @relation("TreeHierarchy")
+
+  @@map("tree_nodes")
+}
+
+/// Social graph: User follows User
+model SocialUser {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  name      String
+  bio       String?
+  createdAt DateTime @default(now())
+
+  // Self-referential M:N through Follow junction
+  following Follow[] @relation("Follower")
+  followers Follow[] @relation("Following")
+
+  // Self-referential: blocked users (implicit M:N)
+  blockedUsers  SocialUser[] @relation("BlockedUsers")
+  blockedBy     SocialUser[] @relation("BlockedUsers")
+
+  @@map("social_users")
+}
+
+/// Explicit junction for follow relationship with timestamp
+model Follow {
+  id         String   @id @default(uuid())
+  followedAt DateTime @default(now()) @map("followed_at")
+
+  followerId String     @map("follower_id")
+  follower   SocialUser @relation("Follower", fields: [followerId], references: [id])
+
+  followingId String     @map("following_id")
+  following   SocialUser @relation("Following", fields: [followingId], references: [id])
+
+  @@unique([followerId, followingId])
+}
+
+// ============================================================================
+// COMPOSITE FOREIGN KEYS
+// ============================================================================
+
+/// Model with composite primary key for FK reference
+model CompositePKParent {
+  orgId     String
+  recordId  String
+  name      String
+  createdAt DateTime @default(now())
+
+  // Has many children
+  children CompositeFKChild[]
+
+  @@id([orgId, recordId])
+  @@map("composite_pk_parents")
+}
+
+/// Model referencing composite FK
+model CompositeFKChild {
+  id        String   @id @default(uuid())
+  name      String
+  value     Int
+  createdAt DateTime @default(now())
+
+  // Composite foreign key
+  parentOrgId    String @map("parent_org_id")
+  parentRecordId String @map("parent_record_id")
+
+  parent CompositePKParent @relation(fields: [parentOrgId, parentRecordId], references: [orgId, recordId])
+
+  @@index([parentOrgId, parentRecordId])
+  @@map("composite_fk_children")
+}
+
+// ============================================================================
+// TASKS WITH MULTIPLE RELATIONSHIPS TO SAME MODEL
+// ============================================================================
+
+/// Task with multiple relations to Employee
+model Task {
+  id          String      @id @default(uuid())
+  title       String
+  description String?
+  status      Status      @default(PENDING)
+  priority    Priority    @default(MEDIUM)
+  dueDate     DateTime?   @map("due_date")
+  completedAt DateTime?   @map("completed_at")
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Task belongs to Project
+  projectId String  @map("project_id")
+  project   Project @relation(fields: [projectId], references: [id])
+
+  // Task has assignee (Employee) - can be null
+  assigneeId String?   @map("assignee_id")
+  assignee   Employee? @relation("TaskAssignee", fields: [assigneeId], references: [id])
+
+  // Task has creator (Employee)
+  creatorId String   @map("creator_id")
+  creator   Employee @relation("TaskCreator", fields: [creatorId], references: [id])
+}
+
+// ============================================================================
+// NATIVE DATABASE TYPES (@db.*)
+// ============================================================================
+
+/// Model using PostgreSQL native types
+model NativeTypes {
+  id String @id @default(uuid()) @db.Uuid
+
+  // String variations
+  varcharField    String  @db.VarChar(255)
+  charField       String  @db.Char(10)
+  textField       String  @db.Text
+
+  // Numeric variations
+  smallIntField   Int     @db.SmallInt
+  integerField    Int     @db.Integer
+  bigIntField     BigInt  @db.BigInt
+  realField       Float   @db.Real
+  doublePrecision Float   @db.DoublePrecision
+  decimalField    Decimal @db.Decimal(10, 2)
+  moneyField      Decimal @db.Money
+
+  // Date/Time variations
+  timestampField  DateTime @db.Timestamp(6)
+  timestampTz     DateTime @db.Timestamptz(6)
+  dateField       DateTime @db.Date
+  timeField       DateTime @db.Time(6)
+  timeTzField     DateTime @db.Timetz(6)
+
+  // Boolean
+  boolField Boolean @db.Boolean
+
+  // Binary
+  byteaField Bytes @db.ByteA
+
+  // JSON variations
+  jsonField  Json @db.Json
+  jsonbField Json @db.JsonB
+
+  // Special types
+  uuidField  String @db.Uuid
+  xmlField   String @db.Xml
+  inetField  String @db.Inet
+
+  @@map("native_types")
+}
+
+// ============================================================================
+// MODELS TO BE EXCLUDED (via excludeTables config)
+// ============================================================================
+
+/// This model should be excluded from Zero schema
+model IgnoredModel {
+  id        String   @id @default(uuid())
+  name      String
+  secretKey String   @map("secret_key")
+  createdAt DateTime @default(now())
+}
+
+/// Internal audit log - excluded
+model InternalAuditLog {
+  id        String   @id @default(uuid())
+  action    String
+  tableName String   @map("table_name")
+  recordId  String   @map("record_id")
+  oldData   Json?    @map("old_data")
+  newData   Json?    @map("new_data")
+  userId    String?  @map("user_id")
+  ipAddress String?  @map("ip_address")
+  createdAt DateTime @default(now())
+
+  @@index([tableName, recordId])
+  @@index([userId])
+  @@map("internal_audit_logs")
+}
+
+// ============================================================================
+// EDGE CASES AND SPECIAL SCENARIOS
+// ============================================================================
+
+/// Model with all optional fields (except ID)
+model AllOptional {
+  id String @id @default(uuid())
+
+  optString   String?
+  optInt      Int?
+  optFloat    Float?
+  optBool     Boolean?
+  optDateTime DateTime?
+  optJson     Json?
+  optBigInt   BigInt?
+  optDecimal  Decimal?
+  optBytes    Bytes?
+  optEnum     Status?
+  optEnumArr  Role[]
+}
+
+/// Model with very long field names
+model LongFieldNames {
+  id String @id @default(uuid())
+
+  thisIsAVeryLongFieldNameThatMightCauseIssuesInSomeDatabases                String @map("long_field_1")
+  anotherExtremelyLongFieldNameForTestingPurposesAndEdgeCases               Int    @map("long_field_2")
+  yetAnotherLongFieldNameToEnsureTheGeneratorHandlesThemCorrectly           Boolean @map("long_field_3")
+
+  @@map("long_field_names")
+}
+
+/// Model with JSON containing complex nested structure hint
+model ComplexJson {
+  id String @id @default(uuid())
+
+  // These would benefit from typed JSON in the future
+  userPreferences Json  // { theme: string, language: string, notifications: { email: boolean, push: boolean } }
+  formData        Json  // Dynamic form submissions
+  apiResponse     Json  // Cached API responses
+  geoLocation     Json  // { lat: number, lng: number, accuracy: number }
+  metadata        Json? // Optional complex metadata
+
+  @@map("complex_json")
+}
+
+/// Order model for e-commerce scenario
+model Order {
+  id          String      @id @default(uuid())
+  orderNumber String      @unique @map("order_number")
+  status      OrderStatus @default(DRAFT)
+  subtotal    Decimal     @db.Decimal(10, 2)
+  tax         Decimal     @db.Decimal(10, 2)
+  shipping    Decimal     @db.Decimal(10, 2)
+  total       Decimal     @db.Decimal(10, 2)
+  currency    String      @default("USD") @db.Char(3)
+  notes       String?
+
+  // Shipping address as JSON (denormalized for simplicity)
+  shippingAddress Json @map("shipping_address")
+  billingAddress  Json @map("billing_address")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Order has many line items
+  lineItems OrderLineItem[]
+
+  // Order has many status history entries
+  statusHistory OrderStatusHistory[]
+}
+
+/// Order line item
+model OrderLineItem {
+  id          String  @id @default(uuid())
+  productId   String  @map("product_id")
+  productName String  @map("product_name")
+  sku         String
+  quantity    Int
+  unitPrice   Decimal @db.Decimal(10, 2) @map("unit_price")
+  totalPrice  Decimal @db.Decimal(10, 2) @map("total_price")
+
+  orderId String @map("order_id")
+  order   Order  @relation(fields: [orderId], references: [id])
+
+  @@map("order_line_items")
+}
+
+/// Order status history for audit trail
+model OrderStatusHistory {
+  id        String      @id @default(uuid())
+  fromStatus OrderStatus? @map("from_status")
+  toStatus  OrderStatus @map("to_status")
+  reason    String?
+  changedAt DateTime    @default(now()) @map("changed_at")
+  changedBy String?     @map("changed_by")
+
+  orderId String @map("order_id")
+  order   Order  @relation(fields: [orderId], references: [id])
+
+  @@index([orderId, changedAt])
+  @@map("order_status_history")
+}
+
+/// Notification model with enum arrays
+model Notification {
+  id        String             @id @default(uuid())
   title     String
-  content   String?
-  published Boolean  @default(false)
-  authorId  String
-  author    User     @relation(fields: [authorId], references: [id])
+  body      String
+  data      Json?
+  read      Boolean            @default(false)
+  channels  NotificationType[]  // Which channels to send to
+  sentVia   NotificationType[]  // Which channels it was actually sent through
+  priority  Priority           @default(MEDIUM)
+
+  scheduledFor DateTime? @map("scheduled_for")
+  sentAt       DateTime? @map("sent_at")
+  readAt       DateTime? @map("read_at")
+  createdAt    DateTime  @default(now())
+
+  @@index([read, createdAt])
+}
+
+/// Model to test reserved words as field names
+model ReservedWords {
+  id       String  @id @default(uuid())
+  select   String  @map("select_field")
+  from     String  @map("from_field")
+  where    String  @map("where_field")
+  order    String  @map("order_field")
+  group    String  @map("group_field")
+  having   String  @map("having_field")
+  limit    Int     @map("limit_field")
+  offset   Int     @map("offset_field")
+  join     String  @map("join_field")
+  insert   String  @map("insert_field")
+  update   String  @map("update_field")
+  delete   String  @map("delete_field")
+  create   String  @map("create_field")
+  drop     String  @map("drop_field")
+  table    String  @map("table_field")
+  index    String  @map("index_field")
+
+  @@map("reserved_words")
+}
+
+/// Model with numbers in name
+model Model123WithNumbers456 {
+  id      String @id @default(uuid())
+  field1  String
+  field2  Int
+  field3  Boolean
+}
+
+/// Model testing minimum viable setup
+model MinimalModel {
+  id String @id
+}
+
+/// Model with only auto-generated fields
+model AutoGeneratedOnly {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

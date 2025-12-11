@@ -6,52 +6,1436 @@ import {
   createBuilder,
   createCRUDBuilder,
   createSchema,
+  enumeration,
+  json,
   number,
   relationships,
   string,
   table,
 } from '@rocicorp/zero';
 
-export const userTable = table('User')
+export type Role = 'USER' | 'ADMIN' | 'MODERATOR' | 'SUPER_ADMIN';
+
+export type Status = 'pending' | 'active' | 'inactive' | 'archived' | 'deleted';
+
+export type OrderStatus =
+  | 'DRAFT'
+  | 'SUBMITTED'
+  | 'PROCESSING'
+  | 'SHIPPED'
+  | 'DELIVERED'
+  | 'CANCELLED'
+  | 'REFUNDED';
+
+export type Priority = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+
+export type NotificationType = 'EMAIL' | 'SMS' | 'PUSH' | 'IN_APP' | 'WEBHOOK';
+
+export const allScalarTypesTable = table('allScalarTypes')
+  .from('AllScalarTypes')
+  .columns({
+    id: string(),
+    stringField: string(),
+    intField: number(),
+    floatField: number(),
+    booleanField: boolean(),
+    dateTimeField: number(),
+    jsonField: json(),
+    bigIntField: number(),
+    decimalField: number(),
+    bytesField: string(),
+    optionalString: string().optional(),
+    optionalInt: number().optional(),
+    optionalFloat: number().optional(),
+    optionalBoolean: boolean().optional(),
+    optionalDateTime: number().optional(),
+    optionalJson: json().optional(),
+    optionalBigInt: number().optional(),
+    optionalDecimal: number().optional(),
+    optionalBytes: string().optional(),
+    createdAt: number(),
+    updatedAt: number(),
+  })
+  .primaryKey('id');
+
+export const allArrayTypesTable = table('allArrayTypes')
+  .from('AllArrayTypes')
+  .columns({
+    id: string(),
+    stringArray: json<string[]>(),
+    intArray: json<number[]>(),
+    floatArray: json<number[]>(),
+    booleanArray: json<boolean[]>(),
+    dateTimeArray: json<number[]>(),
+    jsonArray: json<any[]>(),
+    bigIntArray: json<number[]>(),
+    decimalArray: json<number[]>(),
+    bytesArray: json<any[]>(),
+    roles: json<Role[]>(),
+    statuses: json<Status[]>(),
+    notificationTypes: json<NotificationType[]>(),
+    createdAt: number(),
+  })
+  .primaryKey('id');
+
+export const defaultValuesTable = table('defaultValues')
+  .from('DefaultValues')
+  .columns({
+    id: string(),
+    sequenceNum: number(),
+    cuidField: string(),
+    defaultString: string(),
+    defaultInt: number(),
+    defaultFloat: number(),
+    defaultBool: boolean(),
+    defaultTrue: boolean(),
+    createdAt: number(),
+    updatedAt: number(),
+    status: enumeration<Status>(),
+    role: enumeration<Role>(),
+    metadata: json(),
+    settings: json(),
+    tags: json<string[]>(),
+  })
+  .primaryKey('id');
+
+export const fieldMappingTable = table('fieldMapping')
+  .from('FieldMapping')
+  .columns({
+    id: string(),
+    firstName: string().from('first_name'),
+    lastName: string().from('last_name'),
+    emailAddr: string().from('email_address'),
+    phoneNumber: string().from('phone_number'),
+    createdAt: number().from('created_at'),
+    updatedAt: number().from('updated_at'),
+    deletedAt: number().from('deleted_at').optional(),
+    isActive: boolean().from('is_active'),
+    isVerified: boolean().from('is_verified'),
+    organizationId: string().from('organization_id'),
+  })
+  .primaryKey('id');
+
+export const userAccountTable = table('userAccounts')
+  .from('user_accounts')
+  .columns({
+    id: string(),
+    username: string(),
+    email: string(),
+    createdAt: number(),
+  })
+  .primaryKey('id');
+
+export const userProfileTable = table('userProfiles')
+  .from('user_profiles')
+  .columns({
+    id: string(),
+    bio: string().optional(),
+    avatarUrl: string().from('avatar_url').optional(),
+    website: string().optional(),
+    userId: string().from('user_id'),
+  })
+  .primaryKey('id');
+
+export const userSessionTable = table('userSessions')
+  .from('user_sessions')
+  .columns({
+    id: string(),
+    token: string(),
+    userAgent: string().from('user_agent').optional(),
+    ipAddress: string().from('ip_address').optional(),
+    lastActiveAt: number().from('last_active_at'),
+    expiresAt: number().from('expires_at'),
+    userId: string().from('user_id'),
+  })
+  .primaryKey('id');
+
+export const tenantUserTable = table('tenantUser')
+  .from('TenantUser')
+  .columns({
+    tenantId: string(),
+    userId: string(),
+    role: enumeration<Role>(),
+    joinedAt: number(),
+  })
+  .primaryKey('tenantId', 'userId');
+
+export const tenantApiKeyTable = table('tenantApiKeys')
+  .from('tenant_api_keys')
+  .columns({
+    tenantId: string(),
+    keyId: string(),
+    name: string(),
+    hashedKey: string().from('hashed_key'),
+    permissions: json<string[]>(),
+    expiresAt: number().from('expires_at').optional(),
+    createdAt: number().from('created_at'),
+  })
+  .primaryKey('tenantId', 'keyId');
+
+export const tenantTable = table('tenant')
+  .from('Tenant')
+  .columns({
+    id: string(),
+    name: string(),
+    slug: string(),
+    createdAt: number(),
+  })
+  .primaryKey('id');
+
+export const uniqueConstraintsTable = table('uniqueConstraints')
+  .from('unique_constraints')
+  .columns({
+    id: string(),
+    email: string(),
+    username: string(),
+    orgId: string().from('org_id'),
+    employeeId: string().from('employee_id'),
+    firstName: string().from('first_name'),
+    lastName: string().from('last_name'),
+  })
+  .primaryKey('id');
+
+export const indexedModelTable = table('indexedModels')
+  .from('indexed_models')
+  .columns({
+    id: string(),
+    email: string(),
+    status: enumeration<Status>(),
+    createdAt: number().from('created_at'),
+    updatedAt: number().from('updated_at'),
+    categoryId: string().from('category_id'),
+    authorId: string().from('author_id'),
+    title: string(),
+    content: string().optional(),
+  })
+  .primaryKey('id');
+
+export const personTable = table('person')
+  .from('Person')
   .columns({
     id: string(),
     email: string(),
     name: string(),
     createdAt: number(),
+    spouseId: string().optional(),
   })
   .primaryKey('id');
 
-export const postTable = table('Post')
+export const passportTable = table('passport')
+  .from('Passport')
+  .columns({
+    id: string(),
+    passportNumber: string().from('passport_number'),
+    country: string(),
+    expiryDate: number().from('expiry_date'),
+    personId: string().from('person_id'),
+  })
+  .primaryKey('id');
+
+export const driverLicenseTable = table('driverLicenses')
+  .from('driver_licenses')
+  .columns({
+    id: string(),
+    licenseNumber: string().from('license_number'),
+    state: string(),
+    expiryDate: number().from('expiry_date'),
+    class: string(),
+    personId: string().from('person_id'),
+  })
+  .primaryKey('id');
+
+export const organizationTable = table('organization')
+  .from('Organization')
+  .columns({
+    id: string(),
+    name: string(),
+    slug: string(),
+    description: string().optional(),
+    website: string().optional(),
+    createdAt: number(),
+  })
+  .primaryKey('id');
+
+export const departmentTable = table('department')
+  .from('Department')
+  .columns({
+    id: string(),
+    name: string(),
+    code: string(),
+    description: string().optional(),
+    budget: number().optional(),
+    organizationId: string().from('organization_id'),
+  })
+  .primaryKey('id');
+
+export const employeeTable = table('employee')
+  .from('Employee')
+  .columns({
+    id: string(),
+    employeeNo: string().from('employee_no'),
+    firstName: string().from('first_name'),
+    lastName: string().from('last_name'),
+    email: string(),
+    title: string().optional(),
+    salary: number().optional(),
+    hireDate: number().from('hire_date'),
+    organizationId: string().from('organization_id'),
+    departmentId: string().from('department_id').optional(),
+  })
+  .primaryKey('id');
+
+export const teamTable = table('team')
+  .from('Team')
+  .columns({
+    id: string(),
+    name: string(),
+    description: string().optional(),
+    createdAt: number(),
+    departmentId: string().from('department_id'),
+    managerId: string().from('manager_id').optional(),
+  })
+  .primaryKey('id');
+
+export const teamMemberTable = table('teamMembers')
+  .from('team_members')
+  .columns({
+    id: string(),
+    role: string(),
+    joinedAt: number().from('joined_at'),
+    teamId: string().from('team_id'),
+    employeeId: string().from('employee_id'),
+  })
+  .primaryKey('id');
+
+export const projectTable = table('project')
+  .from('Project')
+  .columns({
+    id: string(),
+    name: string(),
+    description: string().optional(),
+    status: enumeration<Status>(),
+    priority: enumeration<Priority>(),
+    startDate: number().from('start_date').optional(),
+    endDate: number().from('end_date').optional(),
+    budget: number().optional(),
+    createdAt: number(),
+    organizationId: string().from('organization_id'),
+  })
+  .primaryKey('id');
+
+export const tagTable = table('tag')
+  .from('Tag')
+  .columns({
+    id: string(),
+    name: string(),
+    color: string(),
+    createdAt: number(),
+  })
+  .primaryKey('id');
+
+export const articleTable = table('article')
+  .from('Article')
   .columns({
     id: string(),
     title: string(),
-    content: string().optional(),
-    published: boolean(),
-    authorId: string(),
+    slug: string(),
+    content: string(),
+    excerpt: string().optional(),
+    publishedAt: number().from('published_at').optional(),
+    createdAt: number(),
+    updatedAt: number(),
   })
   .primaryKey('id');
 
-export const userTableRelationships = relationships(userTable, ({many}) => ({
-  posts: many({
+export const categoryTable = table('category')
+  .from('Category')
+  .columns({
+    id: string(),
+    name: string(),
+    slug: string(),
+    description: string().optional(),
+    parentId: string().from('parent_id').optional(),
+  })
+  .primaryKey('id');
+
+export const skillTable = table('skill')
+  .from('Skill')
+  .columns({
+    id: string(),
+    name: string(),
+    description: string().optional(),
+    category: string().optional(),
+  })
+  .primaryKey('id');
+
+export const workerTable = table('worker')
+  .from('Worker')
+  .columns({
+    id: string(),
+    name: string(),
+    email: string(),
+    hourlyRate: number().from('hourly_rate'),
+  })
+  .primaryKey('id');
+
+export const workerSkillTable = table('workerSkills')
+  .from('worker_skills')
+  .columns({
+    id: string(),
+    proficiency: number(),
+    yearsExperience: number().from('years_experience'),
+    certified: boolean(),
+    certifiedAt: number().from('certified_at').optional(),
+    workerId: string().from('worker_id'),
+    skillId: string().from('skill_id'),
+  })
+  .primaryKey('id');
+
+export const commentTable = table('comment')
+  .from('Comment')
+  .columns({
+    id: string(),
+    content: string(),
+    createdAt: number(),
+    updatedAt: number(),
+    articleId: string().from('article_id'),
+    parentId: string().from('parent_id').optional(),
+  })
+  .primaryKey('id');
+
+export const treeNodeTable = table('treeNodes')
+  .from('tree_nodes')
+  .columns({
+    id: string(),
+    name: string(),
+    level: number(),
+    path: string(),
+    createdAt: number(),
+    parentId: string().from('parent_id').optional(),
+  })
+  .primaryKey('id');
+
+export const socialUserTable = table('socialUsers')
+  .from('social_users')
+  .columns({
+    id: string(),
+    username: string(),
+    name: string(),
+    bio: string().optional(),
+    createdAt: number(),
+  })
+  .primaryKey('id');
+
+export const followTable = table('follow')
+  .from('Follow')
+  .columns({
+    id: string(),
+    followedAt: number().from('followed_at'),
+    followerId: string().from('follower_id'),
+    followingId: string().from('following_id'),
+  })
+  .primaryKey('id');
+
+export const compositePkParentTable = table('compositePkParents')
+  .from('composite_pk_parents')
+  .columns({
+    orgId: string(),
+    recordId: string(),
+    name: string(),
+    createdAt: number(),
+  })
+  .primaryKey('orgId', 'recordId');
+
+export const compositeFkChildTable = table('compositeFkChildren')
+  .from('composite_fk_children')
+  .columns({
+    id: string(),
+    name: string(),
+    value: number(),
+    createdAt: number(),
+    parentOrgId: string().from('parent_org_id'),
+    parentRecordId: string().from('parent_record_id'),
+  })
+  .primaryKey('id');
+
+export const taskTable = table('task')
+  .from('Task')
+  .columns({
+    id: string(),
+    title: string(),
+    description: string().optional(),
+    status: enumeration<Status>(),
+    priority: enumeration<Priority>(),
+    dueDate: number().from('due_date').optional(),
+    completedAt: number().from('completed_at').optional(),
+    createdAt: number(),
+    updatedAt: number(),
+    projectId: string().from('project_id'),
+    assigneeId: string().from('assignee_id').optional(),
+    creatorId: string().from('creator_id'),
+  })
+  .primaryKey('id');
+
+export const nativeTypesTable = table('nativeTypes')
+  .from('native_types')
+  .columns({
+    id: string(),
+    varcharField: string(),
+    charField: string(),
+    textField: string(),
+    smallIntField: number(),
+    integerField: number(),
+    bigIntField: number(),
+    realField: number(),
+    doublePrecision: number(),
+    decimalField: number(),
+    moneyField: number(),
+    timestampField: number(),
+    timestampTz: number(),
+    dateField: number(),
+    timeField: number(),
+    timeTzField: number(),
+    boolField: boolean(),
+    byteaField: string(),
+    jsonField: json(),
+    jsonbField: json(),
+    uuidField: string(),
+    xmlField: string(),
+    inetField: string(),
+  })
+  .primaryKey('id');
+
+export const allOptionalTable = table('allOptional')
+  .from('AllOptional')
+  .columns({
+    id: string(),
+    optString: string().optional(),
+    optInt: number().optional(),
+    optFloat: number().optional(),
+    optBool: boolean().optional(),
+    optDateTime: number().optional(),
+    optJson: json().optional(),
+    optBigInt: number().optional(),
+    optDecimal: number().optional(),
+    optBytes: string().optional(),
+    optEnum: enumeration<Status>().optional(),
+    optEnumArr: json<Role[]>(),
+  })
+  .primaryKey('id');
+
+export const longFieldNamesTable = table('longFieldNames')
+  .from('long_field_names')
+  .columns({
+    id: string(),
+    thisIsAVeryLongFieldNameThatMightCauseIssuesInSomeDatabases:
+      string().from('long_field_1'),
+    anotherExtremelyLongFieldNameForTestingPurposesAndEdgeCases:
+      number().from('long_field_2'),
+    yetAnotherLongFieldNameToEnsureTheGeneratorHandlesThemCorrectly:
+      boolean().from('long_field_3'),
+  })
+  .primaryKey('id');
+
+export const complexJsonTable = table('complexJson')
+  .from('complex_json')
+  .columns({
+    id: string(),
+    userPreferences: json(),
+    formData: json(),
+    apiResponse: json(),
+    geoLocation: json(),
+    metadata: json().optional(),
+  })
+  .primaryKey('id');
+
+export const orderTable = table('order')
+  .from('Order')
+  .columns({
+    id: string(),
+    orderNumber: string().from('order_number'),
+    status: enumeration<OrderStatus>(),
+    subtotal: number(),
+    tax: number(),
+    shipping: number(),
+    total: number(),
+    currency: string(),
+    notes: string().optional(),
+    shippingAddress: json().from('shipping_address'),
+    billingAddress: json().from('billing_address'),
+    createdAt: number(),
+    updatedAt: number(),
+  })
+  .primaryKey('id');
+
+export const orderLineItemTable = table('orderLineItems')
+  .from('order_line_items')
+  .columns({
+    id: string(),
+    productId: string().from('product_id'),
+    productName: string().from('product_name'),
+    sku: string(),
+    quantity: number(),
+    unitPrice: number().from('unit_price'),
+    totalPrice: number().from('total_price'),
+    orderId: string().from('order_id'),
+  })
+  .primaryKey('id');
+
+export const orderStatusHistoryTable = table('orderStatusHistory')
+  .from('order_status_history')
+  .columns({
+    id: string(),
+    fromStatus: enumeration<OrderStatus>().from('from_status').optional(),
+    toStatus: enumeration<OrderStatus>().from('to_status'),
+    reason: string().optional(),
+    changedAt: number().from('changed_at'),
+    changedBy: string().from('changed_by').optional(),
+    orderId: string().from('order_id'),
+  })
+  .primaryKey('id');
+
+export const notificationTable = table('notification')
+  .from('Notification')
+  .columns({
+    id: string(),
+    title: string(),
+    body: string(),
+    data: json().optional(),
+    read: boolean(),
+    channels: json<NotificationType[]>(),
+    sentVia: json<NotificationType[]>(),
+    priority: enumeration<Priority>(),
+    scheduledFor: number().from('scheduled_for').optional(),
+    sentAt: number().from('sent_at').optional(),
+    readAt: number().from('read_at').optional(),
+    createdAt: number(),
+  })
+  .primaryKey('id');
+
+export const reservedWordsTable = table('reservedWords')
+  .from('reserved_words')
+  .columns({
+    id: string(),
+    select: string().from('select_field'),
+    from: string().from('from_field'),
+    where: string().from('where_field'),
+    order: string().from('order_field'),
+    group: string().from('group_field'),
+    having: string().from('having_field'),
+    limit: number().from('limit_field'),
+    offset: number().from('offset_field'),
+    join: string().from('join_field'),
+    insert: string().from('insert_field'),
+    update: string().from('update_field'),
+    delete: string().from('delete_field'),
+    create: string().from('create_field'),
+    drop: string().from('drop_field'),
+    table: string().from('table_field'),
+    index: string().from('index_field'),
+  })
+  .primaryKey('id');
+
+export const model123WithNumbers456Table = table('model123WithNumbers456')
+  .from('Model123WithNumbers456')
+  .columns({
+    id: string(),
+    field1: string(),
+    field2: number(),
+    field3: boolean(),
+  })
+  .primaryKey('id');
+
+export const minimalModelTable = table('minimalModel')
+  .from('MinimalModel')
+  .columns({
+    id: string(),
+  })
+  .primaryKey('id');
+
+export const autoGeneratedOnlyTable = table('autoGeneratedOnly')
+  .from('AutoGeneratedOnly')
+  .columns({
+    id: string(),
+    createdAt: number(),
+    updatedAt: number(),
+  })
+  .primaryKey('id');
+
+export const _projectToTagTable = table('_projectToTag')
+  .from('_ProjectToTag')
+  .columns({
+    A: string(),
+    B: string(),
+  })
+  .primaryKey('A', 'B');
+
+export const _projectSkillsTable = table('_projectSkills')
+  .from('_ProjectSkills')
+  .columns({
+    A: string(),
+    B: string(),
+  })
+  .primaryKey('A', 'B');
+
+export const _articleToTagTable = table('_articleToTag')
+  .from('_ArticleToTag')
+  .columns({
+    A: string(),
+    B: string(),
+  })
+  .primaryKey('A', 'B');
+
+export const _articleToCategoryTable = table('_articleToCategory')
+  .from('_ArticleToCategory')
+  .columns({
+    A: string(),
+    B: string(),
+  })
+  .primaryKey('A', 'B');
+
+export const _blockedUsersTable = table('_blockedUsers')
+  .from('_BlockedUsers')
+  .columns({
+    A: string(),
+    B: string(),
+  })
+  .primaryKey('A', 'B');
+
+export const fieldMappingTableRelationships = relationships(
+  fieldMappingTable,
+  ({one}) => ({
+    organization: one({
+      sourceField: ['organizationId'],
+      destField: ['id'],
+      destSchema: organizationTable,
+    }),
+  }),
+);
+export const userAccountTableRelationships = relationships(
+  userAccountTable,
+  ({one, many}) => ({
+    profile: one({
+      sourceField: ['id'],
+      destField: ['userId'],
+      destSchema: userProfileTable,
+    }),
+    sessions: many({
+      sourceField: ['id'],
+      destField: ['userId'],
+      destSchema: userSessionTable,
+    }),
+  }),
+);
+export const userProfileTableRelationships = relationships(
+  userProfileTable,
+  ({one}) => ({
+    user: one({
+      sourceField: ['userId'],
+      destField: ['id'],
+      destSchema: userAccountTable,
+    }),
+  }),
+);
+export const userSessionTableRelationships = relationships(
+  userSessionTable,
+  ({one}) => ({
+    user: one({
+      sourceField: ['userId'],
+      destField: ['id'],
+      destSchema: userAccountTable,
+    }),
+  }),
+);
+export const tenantUserTableRelationships = relationships(
+  tenantUserTable,
+  ({one}) => ({
+    tenant: one({
+      sourceField: ['tenantId'],
+      destField: ['id'],
+      destSchema: tenantTable,
+    }),
+  }),
+);
+export const tenantApiKeyTableRelationships = relationships(
+  tenantApiKeyTable,
+  ({one}) => ({
+    tenant: one({
+      sourceField: ['tenantId'],
+      destField: ['id'],
+      destSchema: tenantTable,
+    }),
+  }),
+);
+export const tenantTableRelationships = relationships(
+  tenantTable,
+  ({many}) => ({
+    users: many({
+      sourceField: ['id'],
+      destField: ['tenantId'],
+      destSchema: tenantUserTable,
+    }),
+    apiKeys: many({
+      sourceField: ['id'],
+      destField: ['tenantId'],
+      destSchema: tenantApiKeyTable,
+    }),
+  }),
+);
+export const personTableRelationships = relationships(personTable, ({one}) => ({
+  passport: one({
     sourceField: ['id'],
-    destField: ['authorId'],
-    destSchema: postTable,
+    destField: ['personId'],
+    destSchema: passportTable,
   }),
-}));
-export const postTableRelationships = relationships(postTable, ({one}) => ({
-  author: one({
-    sourceField: ['authorId'],
+  driverLicense: one({
+    sourceField: ['id'],
+    destField: ['personId'],
+    destSchema: driverLicenseTable,
+  }),
+  spouse: one({
+    sourceField: ['spouseId'],
     destField: ['id'],
-    destSchema: userTable,
+    destSchema: personTable,
+  }),
+  spouseOf: one({
+    sourceField: ['id'],
+    destField: ['spouseId'],
+    destSchema: personTable,
   }),
 }));
+export const passportTableRelationships = relationships(
+  passportTable,
+  ({one}) => ({
+    person: one({
+      sourceField: ['personId'],
+      destField: ['id'],
+      destSchema: personTable,
+    }),
+  }),
+);
+export const driverLicenseTableRelationships = relationships(
+  driverLicenseTable,
+  ({one}) => ({
+    person: one({
+      sourceField: ['personId'],
+      destField: ['id'],
+      destSchema: personTable,
+    }),
+  }),
+);
+export const organizationTableRelationships = relationships(
+  organizationTable,
+  ({many}) => ({
+    departments: many({
+      sourceField: ['id'],
+      destField: ['organizationId'],
+      destSchema: departmentTable,
+    }),
+    employees: many({
+      sourceField: ['id'],
+      destField: ['organizationId'],
+      destSchema: employeeTable,
+    }),
+    projects: many({
+      sourceField: ['id'],
+      destField: ['organizationId'],
+      destSchema: projectTable,
+    }),
+    fieldMappings: many({
+      sourceField: ['id'],
+      destField: ['organizationId'],
+      destSchema: fieldMappingTable,
+    }),
+  }),
+);
+export const departmentTableRelationships = relationships(
+  departmentTable,
+  ({one, many}) => ({
+    organization: one({
+      sourceField: ['organizationId'],
+      destField: ['id'],
+      destSchema: organizationTable,
+    }),
+    employees: many({
+      sourceField: ['id'],
+      destField: ['departmentId'],
+      destSchema: employeeTable,
+    }),
+    teams: many({
+      sourceField: ['id'],
+      destField: ['departmentId'],
+      destSchema: teamTable,
+    }),
+  }),
+);
+export const employeeTableRelationships = relationships(
+  employeeTable,
+  ({one, many}) => ({
+    organization: one({
+      sourceField: ['organizationId'],
+      destField: ['id'],
+      destSchema: organizationTable,
+    }),
+    department: one({
+      sourceField: ['departmentId'],
+      destField: ['id'],
+      destSchema: departmentTable,
+    }),
+    managedTeam: one({
+      sourceField: ['id'],
+      destField: ['managerId'],
+      destSchema: teamTable,
+    }),
+    teamMemberships: many({
+      sourceField: ['id'],
+      destField: ['employeeId'],
+      destSchema: teamMemberTable,
+    }),
+    assignedTasks: many({
+      sourceField: ['id'],
+      destField: ['assigneeId'],
+      destSchema: taskTable,
+    }),
+    createdTasks: many({
+      sourceField: ['id'],
+      destField: ['creatorId'],
+      destSchema: taskTable,
+    }),
+  }),
+);
+export const teamTableRelationships = relationships(
+  teamTable,
+  ({one, many}) => ({
+    department: one({
+      sourceField: ['departmentId'],
+      destField: ['id'],
+      destSchema: departmentTable,
+    }),
+    manager: one({
+      sourceField: ['managerId'],
+      destField: ['id'],
+      destSchema: employeeTable,
+    }),
+    members: many({
+      sourceField: ['id'],
+      destField: ['teamId'],
+      destSchema: teamMemberTable,
+    }),
+  }),
+);
+export const teamMemberTableRelationships = relationships(
+  teamMemberTable,
+  ({one}) => ({
+    team: one({
+      sourceField: ['teamId'],
+      destField: ['id'],
+      destSchema: teamTable,
+    }),
+    employee: one({
+      sourceField: ['employeeId'],
+      destField: ['id'],
+      destSchema: employeeTable,
+    }),
+  }),
+);
+export const projectTableRelationships = relationships(
+  projectTable,
+  ({one, many}) => ({
+    organization: one({
+      sourceField: ['organizationId'],
+      destField: ['id'],
+      destSchema: organizationTable,
+    }),
+    tags: many(
+      {
+        sourceField: ['id'],
+        destField: ['A'],
+        destSchema: _projectToTagTable,
+      },
+      {
+        sourceField: ['B'],
+        destField: ['id'],
+        destSchema: tagTable,
+      },
+    ),
+    tasks: many({
+      sourceField: ['id'],
+      destField: ['projectId'],
+      destSchema: taskTable,
+    }),
+    requiredSkills: many(
+      {
+        sourceField: ['id'],
+        destField: ['A'],
+        destSchema: _projectSkillsTable,
+      },
+      {
+        sourceField: ['B'],
+        destField: ['id'],
+        destSchema: skillTable,
+      },
+    ),
+  }),
+);
+export const tagTableRelationships = relationships(tagTable, ({many}) => ({
+  projects: many(
+    {
+      sourceField: ['id'],
+      destField: ['B'],
+      destSchema: _projectToTagTable,
+    },
+    {
+      sourceField: ['A'],
+      destField: ['id'],
+      destSchema: projectTable,
+    },
+  ),
+  articles: many(
+    {
+      sourceField: ['id'],
+      destField: ['B'],
+      destSchema: _articleToTagTable,
+    },
+    {
+      sourceField: ['A'],
+      destField: ['id'],
+      destSchema: articleTable,
+    },
+  ),
+}));
+export const articleTableRelationships = relationships(
+  articleTable,
+  ({many}) => ({
+    tags: many(
+      {
+        sourceField: ['id'],
+        destField: ['A'],
+        destSchema: _articleToTagTable,
+      },
+      {
+        sourceField: ['B'],
+        destField: ['id'],
+        destSchema: tagTable,
+      },
+    ),
+    categories: many(
+      {
+        sourceField: ['id'],
+        destField: ['A'],
+        destSchema: _articleToCategoryTable,
+      },
+      {
+        sourceField: ['B'],
+        destField: ['id'],
+        destSchema: categoryTable,
+      },
+    ),
+    comments: many({
+      sourceField: ['id'],
+      destField: ['articleId'],
+      destSchema: commentTable,
+    }),
+  }),
+);
+export const categoryTableRelationships = relationships(
+  categoryTable,
+  ({one, many}) => ({
+    parent: one({
+      sourceField: ['parentId'],
+      destField: ['id'],
+      destSchema: categoryTable,
+    }),
+    children: many({
+      sourceField: ['id'],
+      destField: ['parentId'],
+      destSchema: categoryTable,
+    }),
+    articles: many(
+      {
+        sourceField: ['id'],
+        destField: ['B'],
+        destSchema: _articleToCategoryTable,
+      },
+      {
+        sourceField: ['A'],
+        destField: ['id'],
+        destSchema: articleTable,
+      },
+    ),
+  }),
+);
+export const skillTableRelationships = relationships(skillTable, ({many}) => ({
+  workers: many({
+    sourceField: ['id'],
+    destField: ['skillId'],
+    destSchema: workerSkillTable,
+  }),
+  projects: many(
+    {
+      sourceField: ['id'],
+      destField: ['B'],
+      destSchema: _projectSkillsTable,
+    },
+    {
+      sourceField: ['A'],
+      destField: ['id'],
+      destSchema: projectTable,
+    },
+  ),
+}));
+export const workerTableRelationships = relationships(
+  workerTable,
+  ({many}) => ({
+    skills: many({
+      sourceField: ['id'],
+      destField: ['workerId'],
+      destSchema: workerSkillTable,
+    }),
+  }),
+);
+export const workerSkillTableRelationships = relationships(
+  workerSkillTable,
+  ({one}) => ({
+    worker: one({
+      sourceField: ['workerId'],
+      destField: ['id'],
+      destSchema: workerTable,
+    }),
+    skill: one({
+      sourceField: ['skillId'],
+      destField: ['id'],
+      destSchema: skillTable,
+    }),
+  }),
+);
+export const commentTableRelationships = relationships(
+  commentTable,
+  ({one, many}) => ({
+    article: one({
+      sourceField: ['articleId'],
+      destField: ['id'],
+      destSchema: articleTable,
+    }),
+    parent: one({
+      sourceField: ['parentId'],
+      destField: ['id'],
+      destSchema: commentTable,
+    }),
+    replies: many({
+      sourceField: ['id'],
+      destField: ['parentId'],
+      destSchema: commentTable,
+    }),
+  }),
+);
+export const treeNodeTableRelationships = relationships(
+  treeNodeTable,
+  ({one, many}) => ({
+    parent: one({
+      sourceField: ['parentId'],
+      destField: ['id'],
+      destSchema: treeNodeTable,
+    }),
+    children: many({
+      sourceField: ['id'],
+      destField: ['parentId'],
+      destSchema: treeNodeTable,
+    }),
+  }),
+);
+export const socialUserTableRelationships = relationships(
+  socialUserTable,
+  ({many}) => ({
+    following: many({
+      sourceField: ['id'],
+      destField: ['followerId'],
+      destSchema: followTable,
+    }),
+    followers: many({
+      sourceField: ['id'],
+      destField: ['followingId'],
+      destSchema: followTable,
+    }),
+    blockedUsers: many(
+      {
+        sourceField: ['id'],
+        destField: ['A'],
+        destSchema: _blockedUsersTable,
+      },
+      {
+        sourceField: ['B'],
+        destField: ['id'],
+        destSchema: socialUserTable,
+      },
+    ),
+    blockedBy: many(
+      {
+        sourceField: ['id'],
+        destField: ['A'],
+        destSchema: _blockedUsersTable,
+      },
+      {
+        sourceField: ['B'],
+        destField: ['id'],
+        destSchema: socialUserTable,
+      },
+    ),
+  }),
+);
+export const followTableRelationships = relationships(followTable, ({one}) => ({
+  follower: one({
+    sourceField: ['followerId'],
+    destField: ['id'],
+    destSchema: socialUserTable,
+  }),
+  following: one({
+    sourceField: ['followingId'],
+    destField: ['id'],
+    destSchema: socialUserTable,
+  }),
+}));
+export const compositePkParentTableRelationships = relationships(
+  compositePkParentTable,
+  ({many}) => ({
+    children: many({
+      sourceField: ['orgId', 'recordId'],
+      destField: ['parentOrgId', 'parentRecordId'],
+      destSchema: compositeFkChildTable,
+    }),
+  }),
+);
+export const compositeFkChildTableRelationships = relationships(
+  compositeFkChildTable,
+  ({one}) => ({
+    parent: one({
+      sourceField: ['parentOrgId', 'parentRecordId'],
+      destField: ['orgId', 'recordId'],
+      destSchema: compositePkParentTable,
+    }),
+  }),
+);
+export const taskTableRelationships = relationships(taskTable, ({one}) => ({
+  project: one({
+    sourceField: ['projectId'],
+    destField: ['id'],
+    destSchema: projectTable,
+  }),
+  assignee: one({
+    sourceField: ['assigneeId'],
+    destField: ['id'],
+    destSchema: employeeTable,
+  }),
+  creator: one({
+    sourceField: ['creatorId'],
+    destField: ['id'],
+    destSchema: employeeTable,
+  }),
+}));
+export const orderTableRelationships = relationships(orderTable, ({many}) => ({
+  lineItems: many({
+    sourceField: ['id'],
+    destField: ['orderId'],
+    destSchema: orderLineItemTable,
+  }),
+  statusHistory: many({
+    sourceField: ['id'],
+    destField: ['orderId'],
+    destSchema: orderStatusHistoryTable,
+  }),
+}));
+export const orderLineItemTableRelationships = relationships(
+  orderLineItemTable,
+  ({one}) => ({
+    order: one({
+      sourceField: ['orderId'],
+      destField: ['id'],
+      destSchema: orderTable,
+    }),
+  }),
+);
+export const orderStatusHistoryTableRelationships = relationships(
+  orderStatusHistoryTable,
+  ({one}) => ({
+    order: one({
+      sourceField: ['orderId'],
+      destField: ['id'],
+      destSchema: orderTable,
+    }),
+  }),
+);
+export const _projectToTagTableRelationships = relationships(
+  _projectToTagTable,
+  ({one}) => ({
+    modelA: one({
+      sourceField: ['A'],
+      destField: ['id'],
+      destSchema: projectTable,
+    }),
+    modelB: one({
+      sourceField: ['B'],
+      destField: ['id'],
+      destSchema: tagTable,
+    }),
+  }),
+);
+export const _projectSkillsTableRelationships = relationships(
+  _projectSkillsTable,
+  ({one}) => ({
+    modelA: one({
+      sourceField: ['A'],
+      destField: ['id'],
+      destSchema: projectTable,
+    }),
+    modelB: one({
+      sourceField: ['B'],
+      destField: ['id'],
+      destSchema: skillTable,
+    }),
+  }),
+);
+export const _articleToTagTableRelationships = relationships(
+  _articleToTagTable,
+  ({one}) => ({
+    modelA: one({
+      sourceField: ['A'],
+      destField: ['id'],
+      destSchema: articleTable,
+    }),
+    modelB: one({
+      sourceField: ['B'],
+      destField: ['id'],
+      destSchema: tagTable,
+    }),
+  }),
+);
+export const _articleToCategoryTableRelationships = relationships(
+  _articleToCategoryTable,
+  ({one}) => ({
+    modelA: one({
+      sourceField: ['A'],
+      destField: ['id'],
+      destSchema: articleTable,
+    }),
+    modelB: one({
+      sourceField: ['B'],
+      destField: ['id'],
+      destSchema: categoryTable,
+    }),
+  }),
+);
+export const _blockedUsersTableRelationships = relationships(
+  _blockedUsersTable,
+  ({one}) => ({
+    modelA: one({
+      sourceField: ['A'],
+      destField: ['id'],
+      destSchema: socialUserTable,
+    }),
+    modelB: one({
+      sourceField: ['B'],
+      destField: ['id'],
+      destSchema: socialUserTable,
+    }),
+  }),
+);
 /**
  * The Zero schema object.
  * This type is auto-generated from your Prisma schema definition.
  */
 export const schema = createSchema({
-  tables: [userTable, postTable],
-  relationships: [userTableRelationships, postTableRelationships],
+  tables: [
+    allScalarTypesTable,
+    allArrayTypesTable,
+    defaultValuesTable,
+    fieldMappingTable,
+    userAccountTable,
+    userProfileTable,
+    userSessionTable,
+    tenantUserTable,
+    tenantApiKeyTable,
+    tenantTable,
+    uniqueConstraintsTable,
+    indexedModelTable,
+    personTable,
+    passportTable,
+    driverLicenseTable,
+    organizationTable,
+    departmentTable,
+    employeeTable,
+    teamTable,
+    teamMemberTable,
+    projectTable,
+    tagTable,
+    articleTable,
+    categoryTable,
+    skillTable,
+    workerTable,
+    workerSkillTable,
+    commentTable,
+    treeNodeTable,
+    socialUserTable,
+    followTable,
+    compositePkParentTable,
+    compositeFkChildTable,
+    taskTable,
+    nativeTypesTable,
+    allOptionalTable,
+    longFieldNamesTable,
+    complexJsonTable,
+    orderTable,
+    orderLineItemTable,
+    orderStatusHistoryTable,
+    notificationTable,
+    reservedWordsTable,
+    model123WithNumbers456Table,
+    minimalModelTable,
+    autoGeneratedOnlyTable,
+    _projectToTagTable,
+    _projectSkillsTable,
+    _articleToTagTable,
+    _articleToCategoryTable,
+    _blockedUsersTable,
+  ],
+  relationships: [
+    fieldMappingTableRelationships,
+    userAccountTableRelationships,
+    userProfileTableRelationships,
+    userSessionTableRelationships,
+    tenantUserTableRelationships,
+    tenantApiKeyTableRelationships,
+    tenantTableRelationships,
+    personTableRelationships,
+    passportTableRelationships,
+    driverLicenseTableRelationships,
+    organizationTableRelationships,
+    departmentTableRelationships,
+    employeeTableRelationships,
+    teamTableRelationships,
+    teamMemberTableRelationships,
+    projectTableRelationships,
+    tagTableRelationships,
+    articleTableRelationships,
+    categoryTableRelationships,
+    skillTableRelationships,
+    workerTableRelationships,
+    workerSkillTableRelationships,
+    commentTableRelationships,
+    treeNodeTableRelationships,
+    socialUserTableRelationships,
+    followTableRelationships,
+    compositePkParentTableRelationships,
+    compositeFkChildTableRelationships,
+    taskTableRelationships,
+    orderTableRelationships,
+    orderLineItemTableRelationships,
+    orderStatusHistoryTableRelationships,
+    _projectToTagTableRelationships,
+    _projectSkillsTableRelationships,
+    _articleToTagTableRelationships,
+    _articleToCategoryTableRelationships,
+    _blockedUsersTableRelationships,
+  ],
 });
 
 /**
