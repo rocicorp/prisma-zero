@@ -293,6 +293,38 @@ describe('Schema Mapper', () => {
   });
 
   describe('Relationships', () => {
+    it('uses back-references when relationFromFields is only defined on the target', () => {
+      const userModel = createModel('User', [
+        createField('id', 'String', {isId: true}),
+        createField('profile', 'Profile', {
+          relationName: 'UserProfile',
+          kind: 'object',
+        }),
+      ]);
+
+      const profileModel = createModel('Profile', [
+        createField('id', 'String', {isId: true}),
+        createField('userId', 'String'),
+        createField('user', 'User', {
+          relationName: 'UserProfile',
+          kind: 'object',
+          relationFromFields: ['userId'],
+          relationToFields: ['id'],
+        }),
+      ]);
+
+      const dmmf = createMockDMMF([userModel, profileModel]);
+      const result = transformSchema(dmmf, baseConfig);
+
+      const user = result.models.find(m => m.modelName === 'User');
+      expect(user?.relationships.profile).toEqual({
+        sourceField: ['id'],
+        destField: ['userId'],
+        destSchema: 'profileTable',
+        type: 'one',
+      });
+    });
+
     it('should correctly map one-to-many relationship with composite key on parent', () => {
       const parentModel = createModel(
         'Parent',
@@ -478,6 +510,90 @@ describe('Schema Mapper', () => {
       expect(productModel?.columns?.categories?.type).toBe(
         'json<Category[]>()',
       );
+    });
+  });
+
+  describe('Error handling', () => {
+    it('throws when a model has no primary key', () => {
+      const model = createModel('NoPK', [createField('name', 'String')]);
+
+      expect(() =>
+        transformSchema(createMockDMMF([model]), baseConfig),
+      ).toThrow('No primary key found for NoPK');
+    });
+
+    it('throws when a relationship target model is missing', () => {
+      const model = createModel('Post', [
+        createField('id', 'String', {isId: true}),
+        createField('author', 'User', {
+          relationName: 'Author',
+          kind: 'object',
+        }),
+      ]);
+
+      expect(() =>
+        transformSchema(createMockDMMF([model]), baseConfig),
+      ).toThrow('Target model User not found for relationship author');
+    });
+
+    it('throws when implicit many-to-many models are missing id fields', () => {
+      const postModel = createModel('Post', [
+        createField('id', 'String', {isId: true}),
+        createField('tags', 'Tag', {
+          isList: true,
+          relationName: 'PostTags',
+          kind: 'object',
+        }),
+      ]);
+
+      const tagModel = createModel(
+        'Tag',
+        [
+          createField('label', 'String'),
+          createField('posts', 'Post', {
+            isList: true,
+            relationName: 'PostTags',
+            kind: 'object',
+          }),
+        ],
+        {primaryKey: {fields: ['label'], name: null}},
+      );
+
+      expect(() =>
+        transformSchema(createMockDMMF([postModel, tagModel]), baseConfig),
+      ).toThrow('Implicit relation PostTags: Model Tag has no @id field.');
+    });
+
+    it('throws when implicit many-to-many models have primary keys without @id', () => {
+      const alphaModel = createModel(
+        'Alpha',
+        [
+          createField('key', 'String'),
+          createField('betas', 'Beta', {
+            isList: true,
+            relationName: 'AlphaBeta',
+            kind: 'object',
+          }),
+        ],
+        {primaryKey: {fields: ['key'], name: null}},
+      );
+
+      const betaModel = createModel(
+        'Beta',
+        [
+          createField('key', 'String'),
+          createField('alphas', 'Alpha', {
+            isList: true,
+            relationName: 'AlphaBeta',
+            kind: 'object',
+          }),
+        ],
+        {primaryKey: {fields: ['key'], name: null}},
+      );
+
+      expect(() =>
+        transformSchema(createMockDMMF([alphaModel, betaModel]), baseConfig),
+      ).toThrow('Implicit relation AlphaBeta: Model Alpha has no @id field.');
     });
   });
 });
