@@ -104,10 +104,10 @@ describe('Schema Mapper', () => {
       const userModel = result.models.find(m => m.tableName === 'User');
       expect(userModel).toBeDefined();
       if (userModel) {
-      // Verify that the posts relationship field is not included
-      expect(userModel.relationships).not.toHaveProperty('posts');
-      // Verify that the profile relationship field is still included
-      expect(userModel.relationships).toHaveProperty('profile');
+        // Verify that the posts relationship field is not included
+        expect(userModel.relationships).not.toHaveProperty('posts');
+        // Verify that the profile relationship field is still included
+        expect(userModel.relationships).toHaveProperty('profile');
       }
     });
   });
