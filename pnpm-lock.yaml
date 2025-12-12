@@ -19,8 +19,8 @@ importers:
         specifier: ^0.4.0
         version: 0.4.0
       '@rocicorp/zero':
-        specifier: 0.24.3000000000
-        version: 0.24.3000000000(@opentelemetry/core@2.2.0(@opentelemetry/api@1.9.0))
+        specifier: 0.25.1
+        version: 0.25.1(@opentelemetry/core@2.2.0(@opentelemetry/api@1.9.0))
       '@types/node':
         specifier: ^24.10.1
         version: 24.10.2
@@ -69,9 +69,6 @@ importers:
 
   integration:
     dependencies:
-      '@rocicorp/zero':
-        specifier: 0.25.0-canary.18
-        version: 0.25.0-canary.18(@opentelemetry/core@2.2.0(@opentelemetry/api@1.9.0))
       prisma-zero:
         specifier: workspace:*
         version: link:..
@@ -1214,21 +1211,8 @@ packages:
     engines: {bun: '>=1.1.0', node: 20.x || 22.x || 23.x || 24.x}
     hasBin: true
 
-  '@rocicorp/zero@0.24.3000000000':
-    resolution: {integrity: sha512-rKIoRXnrNj08NLM8I8e5+d0Jl7dNhuolzg2yx8NOVJQERzFBwjApaiTDj1151x+cnt88pnbCf6PsSAEmbcHnBw==}
-    engines: {node: '>=22'}
-    hasBin: true
-    peerDependencies:
-      '@op-engineering/op-sqlite': '>=15'
-      expo-sqlite: '>=15'
-    peerDependenciesMeta:
-      '@op-engineering/op-sqlite':
-        optional: true
-      expo-sqlite:
-        optional: true
-
-  '@rocicorp/zero@0.25.0-canary.18':
-    resolution: {integrity: sha512-CPzd/xALS3UccBh5w5jHfFeoYcebRZoW4buzlwFZVE8/IYMg40GU3aybzBfKOXi7fs67eUw2nO6UdvesBf+Z7A==}
+  '@rocicorp/zero@0.25.1':
+    resolution: {integrity: sha512-XarXIvv82rEfHPOG9ye9efvVf7oGF9UT2gMJn//xUeOc7LMvH2zKYow0EFAGP8bOvQwHVq0F5Nqx8e8ijRD0jA==}
     engines: {node: '>=22'}
     hasBin: true
     peerDependencies:
@@ -4116,65 +4100,7 @@ snapshots:
       bindings: 1.5.0
       prebuild-install: 7.1.3
 
-  '@rocicorp/zero@0.24.3000000000(@opentelemetry/core@2.2.0(@opentelemetry/api@1.9.0))':
-    dependencies:
-      '@badrap/valita': 0.3.11
-      '@databases/escape-identifier': 1.0.3
-      '@databases/sql': 3.3.0
-      '@dotenvx/dotenvx': 1.51.1
-      '@drdgvhbh/postgres-error-codes': 0.0.6
-      '@fastify/cors': 10.1.0
-      '@fastify/websocket': 11.2.0
-      '@google-cloud/precise-date': 4.0.0
-      '@opentelemetry/api': 1.9.0
-      '@opentelemetry/api-logs': 0.203.0
-      '@opentelemetry/auto-instrumentations-node': 0.62.2(@opentelemetry/api@1.9.0)(@opentelemetry/core@2.2.0(@opentelemetry/api@1.9.0))
-      '@opentelemetry/exporter-metrics-otlp-http': 0.203.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/resources': 2.2.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/sdk-metrics': 2.2.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/sdk-node': 0.203.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/sdk-trace-node': 2.2.0(@opentelemetry/api@1.9.0)
-      '@postgresql-typed/oids': 0.2.0
-      '@rocicorp/lock': 1.0.4
-      '@rocicorp/logger': 5.4.0
-      '@rocicorp/resolver': 1.0.2
-      '@rocicorp/zero-sqlite3': 1.0.13
-      '@types/basic-auth': 1.1.8
-      basic-auth: 2.0.1
-      chalk: 5.6.2
-      chalk-template: 1.1.2
-      chokidar: 4.0.3
-      cloudevents: 10.0.0
-      command-line-args: 6.0.1
-      command-line-usage: 7.0.3
-      compare-utf8: 0.1.1
-      defu: 6.1.4
-      eventemitter3: 5.0.1
-      fastify: 5.6.2
-      is-in-subnet: 4.0.1
-      jose: 5.10.0
-      js-xxhash: 4.0.0
-      json-custom-numbers: 3.1.1
-      kasi: 1.1.1
-      nanoid: 5.1.6
-      parse-prometheus-text-format: 1.1.1
-      pg-format: pg-format-fix@1.0.5
-      postgres: 3.4.7
-      prettier: 3.7.4
-      semver: 7.7.3
-      tsx: 4.21.0
-      url-pattern: 1.0.3
-      urlpattern-polyfill: 10.1.0
-      ws: 8.18.3
-    transitivePeerDependencies:
-      - '@75lb/nature'
-      - '@opentelemetry/core'
-      - bufferutil
-      - encoding
-      - supports-color
-      - utf-8-validate
-
-  '@rocicorp/zero@0.25.0-canary.18(@opentelemetry/core@2.2.0(@opentelemetry/api@1.9.0))':
+  '@rocicorp/zero@0.25.1(@opentelemetry/core@2.2.0(@opentelemetry/api@1.9.0))':
     dependencies:
       '@badrap/valita': 0.3.11
       '@databases/escape-identifier': 1.0.3
