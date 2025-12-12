@@ -271,14 +271,17 @@ function mapModel(
     throw new Error(`No primary key found for ${model.name}`);
   }
 
-  const tableName = getTableNameFromModel(model);
-  const camelCasedName = config?.camelCase ? toCamelCase(tableName) : tableName;
-
-  const shouldRemap = config.camelCase && camelCasedName !== tableName;
+  // Use the Prisma model name (optionally camelCased) for the Zero table name.
+  // If the Prisma model is mapped to a different DB table (@@map) or camelCase
+  // changes the casing, capture the DB table name in originalTableName so we
+  // can emit `.from("<dbName>")` in the generated schema.
+  const databaseTableName = getTableNameFromModel(model);
+  const tableName = getTableName(model.name, config);
+  const shouldRemap = tableName !== databaseTableName;
 
   return {
-    tableName: shouldRemap ? camelCasedName : tableName,
-    originalTableName: shouldRemap ? tableName : null,
+    tableName,
+    originalTableName: shouldRemap ? databaseTableName : null,
     modelName: model.name,
     zeroTableName: getZeroTableName(model.name),
     columns,

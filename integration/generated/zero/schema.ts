@@ -62,14 +62,16 @@ export const fieldMappingTable = table('FieldMapping')
   })
   .primaryKey('id');
 
-export const tableMappingTable = table('table_mappings')
+export const tableMappingTable = table('TableMapping')
+  .from('table_mappings')
   .columns({
     id: string(),
     name: string(),
   })
   .primaryKey('id');
 
-export const combinedMappingTable = table('combined_mappings')
+export const combinedMappingTable = table('CombinedMapping')
+  .from('combined_mappings')
   .columns({
     id: string(),
     createdAt: number().from('created_at'),

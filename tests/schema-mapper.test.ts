@@ -126,6 +126,20 @@ describe('Schema Mapper', () => {
       expect(result.models[0]?.originalTableName).toBeNull();
     });
 
+    it('keeps Prisma model names when @@map is used and camelCase is false', () => {
+      const model = createModel(
+        'TableMapping',
+        [createField('id', 'String', {isId: true})],
+        {dbName: 'table_mappings'},
+      );
+
+      const dmmf = createMockDMMF([model]);
+      const result = transformSchema(dmmf, baseConfig);
+
+      expect(result.models[0]?.tableName).toBe('TableMapping');
+      expect(result.models[0]?.originalTableName).toBe('table_mappings');
+    });
+
     it('should remap table names to camel case when camelCase is true', () => {
       const model = createModel('UserProfile', [
         createField('id', 'String', {isId: true}),
@@ -140,6 +154,23 @@ describe('Schema Mapper', () => {
 
       expect(result.models[0]?.tableName).toBe('userProfile');
       expect(result.models[0]?.originalTableName).toBe('UserProfile');
+    });
+
+    it('camelCases the Prisma model name but preserves @@map database name', () => {
+      const model = createModel(
+        'TableMapping',
+        [createField('id', 'String', {isId: true})],
+        {dbName: 'table_mappings'},
+      );
+
+      const dmmf = createMockDMMF([model]);
+      const result = transformSchema(dmmf, {
+        ...baseConfig,
+        camelCase: true,
+      });
+
+      expect(result.models[0]?.tableName).toBe('tableMapping');
+      expect(result.models[0]?.originalTableName).toBe('table_mappings');
     });
 
     it('should preserve table name if already in camel case', () => {
@@ -176,7 +207,7 @@ describe('Schema Mapper', () => {
         camelCase: true,
       });
 
-      expect(result.models[0]?.tableName).toBe('userProfile');
+      expect(result.models[0]?.tableName).toBe('user');
       expect(result.models[0]?.originalTableName).toBe('user_profile');
     });
 
@@ -198,7 +229,7 @@ describe('Schema Mapper', () => {
         camelCase: true,
       });
 
-      expect(result.models[0]?.tableName).toBe('userProfileSettings');
+      expect(result.models[0]?.tableName).toBe('user');
       expect(result.models[0]?.originalTableName).toBe('user_profile_settings');
     });
 
@@ -220,7 +251,7 @@ describe('Schema Mapper', () => {
         camelCase: true,
       });
 
-      expect(result.models[0]?.tableName).toBe('_userProfile');
+      expect(result.models[0]?.tableName).toBe('userProfile');
       expect(result.models[0]?.originalTableName).toBe('_UserProfile');
     });
 
