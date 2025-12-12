@@ -6,7 +6,7 @@ generator zero {
   provider      = "prisma-zero"
   output        = "./generated/zero"
   prettier      = true
-  camelCase     = true
+  // camelCase     = true
   excludeTables = ["ExcludedModel"]
 }
 

@@ -17,8 +17,7 @@ export type Role = 'USER' | 'ADMIN';
 
 export type Status = 'active' | 'inactive';
 
-export const scalarTypesTable = table('scalarTypes')
-  .from('ScalarTypes')
+export const scalarTypesTable = table('ScalarTypes')
   .columns({
     id: string(),
     str: string(),
@@ -33,8 +32,7 @@ export const scalarTypesTable = table('scalarTypes')
   })
   .primaryKey('id');
 
-export const optionalTypesTable = table('optionalTypes')
-  .from('OptionalTypes')
+export const optionalTypesTable = table('OptionalTypes')
   .columns({
     id: string(),
     str: string().optional(),
@@ -45,8 +43,7 @@ export const optionalTypesTable = table('optionalTypes')
   })
   .primaryKey('id');
 
-export const arrayTypesTable = table('arrayTypes')
-  .from('ArrayTypes')
+export const arrayTypesTable = table('ArrayTypes')
   .columns({
     id: string(),
     strings: json<string[]>(),
@@ -57,8 +54,7 @@ export const arrayTypesTable = table('arrayTypes')
   })
   .primaryKey('id');
 
-export const fieldMappingTable = table('fieldMapping')
-  .from('FieldMapping')
+export const fieldMappingTable = table('FieldMapping')
   .columns({
     id: string(),
     firstName: string().from('first_name'),
@@ -66,24 +62,21 @@ export const fieldMappingTable = table('fieldMapping')
   })
   .primaryKey('id');
 
-export const tableMappingTable = table('tableMappings')
-  .from('table_mappings')
+export const tableMappingTable = table('table_mappings')
   .columns({
     id: string(),
     name: string(),
   })
   .primaryKey('id');
 
-export const combinedMappingTable = table('combinedMappings')
-  .from('combined_mappings')
+export const combinedMappingTable = table('combined_mappings')
   .columns({
     id: string(),
     createdAt: number().from('created_at'),
   })
   .primaryKey('id');
 
-export const compositePkTable = table('compositePk')
-  .from('CompositePK')
+export const compositePkTable = table('CompositePK')
   .columns({
     tenantId: string(),
     recordId: string(),
@@ -91,16 +84,14 @@ export const compositePkTable = table('compositePk')
   })
   .primaryKey('tenantId', 'recordId');
 
-export const userTable = table('user')
-  .from('User')
+export const userTable = table('User')
   .columns({
     id: string(),
     email: string(),
   })
   .primaryKey('id');
 
-export const profileTable = table('profile')
-  .from('Profile')
+export const profileTable = table('Profile')
   .columns({
     id: string(),
     bio: string().optional(),
@@ -108,8 +99,7 @@ export const profileTable = table('profile')
   })
   .primaryKey('id');
 
-export const postTable = table('post')
-  .from('Post')
+export const postTable = table('Post')
   .columns({
     id: string(),
     title: string(),
@@ -117,8 +107,7 @@ export const postTable = table('post')
   })
   .primaryKey('id');
 
-export const commentTable = table('comment')
-  .from('Comment')
+export const commentTable = table('Comment')
   .columns({
     id: string(),
     text: string(),
@@ -126,40 +115,35 @@ export const commentTable = table('comment')
   })
   .primaryKey('id');
 
-export const articleTable = table('article')
-  .from('Article')
+export const articleTable = table('Article')
   .columns({
     id: string(),
     name: string(),
   })
   .primaryKey('id');
 
-export const tagTable = table('tag')
-  .from('Tag')
+export const tagTable = table('Tag')
   .columns({
     id: string(),
     name: string(),
   })
   .primaryKey('id');
 
-export const workerTable = table('worker')
-  .from('Worker')
+export const workerTable = table('Worker')
   .columns({
     id: string(),
     name: string(),
   })
   .primaryKey('id');
 
-export const skillTable = table('skill')
-  .from('Skill')
+export const skillTable = table('Skill')
   .columns({
     id: string(),
     name: string(),
   })
   .primaryKey('id');
 
-export const workerSkillTable = table('workerSkill')
-  .from('WorkerSkill')
+export const workerSkillTable = table('WorkerSkill')
   .columns({
     id: string(),
     proficiency: number(),
@@ -168,8 +152,7 @@ export const workerSkillTable = table('workerSkill')
   })
   .primaryKey('id');
 
-export const categoryTable = table('category')
-  .from('Category')
+export const categoryTable = table('Category')
   .columns({
     id: string(),
     name: string(),
@@ -177,24 +160,21 @@ export const categoryTable = table('category')
   })
   .primaryKey('id');
 
-export const socialUserTable = table('socialUser')
-  .from('SocialUser')
+export const socialUserTable = table('SocialUser')
   .columns({
     id: string(),
     username: string(),
   })
   .primaryKey('id');
 
-export const tenantTable = table('tenant')
-  .from('Tenant')
+export const tenantTable = table('Tenant')
   .columns({
     id: string(),
     name: string(),
   })
   .primaryKey('id');
 
-export const tenantConfigTable = table('tenantConfig')
-  .from('TenantConfig')
+export const tenantConfigTable = table('TenantConfig')
   .columns({
     id: string(),
     settings: json(),
@@ -202,8 +182,7 @@ export const tenantConfigTable = table('tenantConfig')
   })
   .primaryKey('id');
 
-export const taskTable = table('task')
-  .from('Task')
+export const taskTable = table('Task')
   .columns({
     id: string(),
     title: string(),
@@ -212,16 +191,14 @@ export const taskTable = table('task')
   })
   .primaryKey('id');
 
-export const memberTable = table('member')
-  .from('Member')
+export const memberTable = table('Member')
   .columns({
     id: string(),
     name: string(),
   })
   .primaryKey('id');
 
-export const enumFieldsTable = table('enumFields')
-  .from('EnumFields')
+export const enumFieldsTable = table('EnumFields')
   .columns({
     id: string(),
     role: enumeration<Role>(),
@@ -229,8 +206,7 @@ export const enumFieldsTable = table('enumFields')
   })
   .primaryKey('id');
 
-export const nativeTypesTable = table('nativeTypes')
-  .from('NativeTypes')
+export const nativeTypesTable = table('NativeTypes')
   .columns({
     id: string(),
     varchar: string(),
@@ -242,15 +218,13 @@ export const nativeTypesTable = table('nativeTypes')
   })
   .primaryKey('id');
 
-export const minimalModelTable = table('minimalModel')
-  .from('MinimalModel')
+export const minimalModelTable = table('MinimalModel')
   .columns({
     id: string(),
   })
   .primaryKey('id');
 
-export const reservedWordsTable = table('reservedWords')
-  .from('ReservedWords')
+export const reservedWordsTable = table('ReservedWords')
   .columns({
     id: string(),
     select: string().from('select_field'),
@@ -259,7 +233,7 @@ export const reservedWordsTable = table('reservedWords')
   })
   .primaryKey('id');
 
-export const _articleToTagTable = table('_articleToTag')
+export const _articleToTagTable = table('_ArticleToTag')
   .from('_ArticleToTag')
   .columns({
     A: string(),
@@ -267,7 +241,7 @@ export const _articleToTagTable = table('_articleToTag')
   })
   .primaryKey('A', 'B');
 
-export const _blockListTable = table('_blockList')
+export const _blockListTable = table('_BlockList')
   .from('_BlockList')
   .columns({
     A: string(),
