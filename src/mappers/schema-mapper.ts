@@ -159,7 +159,10 @@ function mapRelationships(
       }
 
       const backReference = targetModel.fields.find(
-        f => f.relationName === field.relationName && f.type === model.name,
+        f =>
+          f.relationName === field.relationName &&
+          f.type === model.name &&
+          f.name !== field.name, // Exclude current field for self-referential relations
       );
 
       if (field.isList) {
@@ -179,7 +182,12 @@ function mapRelationships(
               `Implicit relation ${field.name}: Model ${model.name} or ${targetModel.name} not found.`,
             );
           }
-          const isModelA = model.name === modelA.name;
+          const isSelfReferential = model.name === targetModel.name;
+          const isModelA = isSelfReferential
+            ? backReference
+              ? field.name.localeCompare(backReference.name) < 0
+              : true
+            : model.name === modelA.name;
 
           // Create a chained relationship through the join table
           relationships[field.name] = {
@@ -263,14 +271,17 @@ function mapModel(
     throw new Error(`No primary key found for ${model.name}`);
   }
 
-  const tableName = getTableNameFromModel(model);
-  const camelCasedName = config?.camelCase ? toCamelCase(tableName) : tableName;
-
-  const shouldRemap = config.camelCase && camelCasedName !== tableName;
+  // Use the Prisma model name (optionally camelCased) for the Zero table name.
+  // If the Prisma model is mapped to a different DB table (@@map) or camelCase
+  // changes the casing, capture the DB table name in originalTableName so we
+  // can emit `.from("<dbName>")` in the generated schema.
+  const databaseTableName = getTableNameFromModel(model);
+  const tableName = getTableName(model.name, config);
+  const shouldRemap = tableName !== databaseTableName;
 
   return {
-    tableName: shouldRemap ? camelCasedName : tableName,
-    originalTableName: shouldRemap ? tableName : null,
+    tableName,
+    originalTableName: shouldRemap ? databaseTableName : null,
     modelName: model.name,
     zeroTableName: getZeroTableName(model.name),
     columns,
@@ -304,12 +315,22 @@ export function transformSchema(
         if (config.excludeTables?.includes(targetModel.name)) return null;
 
         const backReference = targetModel.fields.find(
-          f => f.relationName === field.relationName && f.type === model.name,
+          f =>
+            f.relationName === field.relationName &&
+            f.type === model.name &&
+            f.name !== field.name, // Exclude current field for self-referential relations
         );
 
         if (backReference?.isList) {
           // Only create the join table once for each relationship
-          if (model.name.localeCompare(targetModel.name) < 0) {
+          // For self-referential relations (model === targetModel), use field name comparison
+          // For different models, use model name comparison
+          const isSelfReferential = model.name === targetModel.name;
+          const shouldCreate = isSelfReferential
+            ? field.name.localeCompare(backReference.name) < 0
+            : model.name.localeCompare(targetModel.name) < 0;
+
+          if (shouldCreate) {
             return createImplicitManyToManyModel(
               model,
               targetModel,

@@ -13,13 +13,14 @@ function generateImports(schema: TransformedSchema): string {
   usedImports.add('table');
   usedImports.add('createSchema');
   usedImports.add('createBuilder');
-  usedImports.add('createCRUDBuilder');
 
   // Check which type functions are used in the schema
   schema.models.forEach(model => {
     Object.values(model.columns).forEach(mapping => {
-      // Extract the base type (e.g., "string()" -> "string", "enumeration(...)" -> "enumeration")
-      const baseType = mapping.type.split('(')[0];
+      // Extract the base type (e.g., "string()" -> "string", "enumeration<T>()" -> "enumeration", "json<T>()" -> "json")
+      // Handle both generic types like "enumeration<T>()" and simple types like "string()"
+      const match = mapping.type.match(/^([a-z]+)/);
+      const baseType = match?.[1];
       if (baseType) {
         usedImports.add(baseType);
       }
@@ -202,13 +203,6 @@ function generateSchema(schema: TransformedSchema): string {
   output += ' * @deprecated Use `zql` instead.\n';
   output += ' */\n';
   output += 'export const builder = zql;\n';
-
-  output += '/**\n';
-  output += ' * Represents the Zero schema CRUD builder.\n';
-  output +=
-    ' * This type is auto-generated from your Prisma schema definition.\n';
-  output += ' */\n';
-  output += 'export const crud = createCRUDBuilder(schema);\n';
 
   output += '/** Defines the default types for Zero */\n';
   output += 'declare module "@rocicorp/zero" {\n';

@@ -3,24 +3,314 @@ datasource db {
 }
 
 generator zero {
-  provider = "prisma-zero"
-  output   = "./generated/zero"
-  prettier = true
+  provider      = "prisma-zero"
+  output        = "./generated/zero"
+  prettier      = true
+  // camelCase     = true
+  excludeTables = ["ExcludedModel"]
 }
 
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+/// TEST: Basic enum → TypeScript union type
+enum Role {
+  USER
+  ADMIN
+}
+
+/// TEST: Enum with @map → uses dbName in union values
+enum Status {
+  ACTIVE   @map("active")
+  INACTIVE @map("inactive")
+}
+
+// ============================================================================
+// SCALAR TYPES - Tests all Prisma scalar → Zero type mappings
+// ============================================================================
+
+/// TEST: All scalar types and their Zero mappings
+/// - String → string()
+/// - Int/Float/BigInt/Decimal → number()
+/// - Boolean → boolean()
+/// - DateTime → number() (timestamp)
+/// - Json → json()
+/// - Bytes → string() (fallback)
+model ScalarTypes {
+  id       String   @id @default(uuid())
+  str      String
+  int      Int
+  float    Float
+  bool     Boolean
+  dateTime DateTime
+  json     Json
+  bigInt   BigInt
+  decimal  Decimal
+  bytes    Bytes
+}
+
+/// TEST: Optional modifier → .optional() on all types
+model OptionalTypes {
+  id       String    @id @default(uuid())
+  str      String?
+  int      Int?
+  dateTime DateTime?
+  json     Json?
+  enum     Status?
+}
+
+/// TEST: Array types → json<T[]>() since Zero doesn't support native arrays
+model ArrayTypes {
+  id        String    @id @default(uuid())
+  strings   String[]
+  ints      Int[]
+  bools     Boolean[]
+  enums     Role[]
+  jsonArray Json[]
+}
+
+// ============================================================================
+// FIELD & TABLE MAPPING - Tests @map and @@map attributes
+// ============================================================================
+
+/// TEST: Field @map → .from('db_column_name')
+model FieldMapping {
+  id        String @id @default(uuid())
+  firstName String @map("first_name")
+  lastName  String @map("last_name")
+}
+
+/// TEST: Table @@map → table().from('db_table_name')
+model TableMapping {
+  id   String @id @default(uuid())
+  name String
+
+  @@map("table_mappings")
+}
+
+/// TEST: Combined field + table mapping
+model CombinedMapping {
+  id        String   @id @default(uuid())
+  createdAt DateTime @map("created_at")
+
+  @@map("combined_mappings")
+}
+
+// ============================================================================
+// PRIMARY KEYS - Tests @id and @@id
+// ============================================================================
+
+/// TEST: Composite primary key (@@id) → .primaryKey('field1', 'field2')
+model CompositePK {
+  tenantId String
+  recordId String
+  data     String
+
+  @@id([tenantId, recordId])
+}
+
+// ============================================================================
+// RELATIONSHIPS - One-to-One
+// ============================================================================
+
+/// TEST: One-to-one relationship (has one side)
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  name      String
-  createdAt DateTime @default(now())
-  posts     Post[]
+  id      String   @id @default(uuid())
+  email   String   @unique
+  profile Profile?
+  posts   Post[]
 }
 
+/// TEST: One-to-one relationship (belongs to side with FK)
+model Profile {
+  id     String  @id @default(uuid())
+  bio    String?
+  userId String  @unique
+  user   User    @relation(fields: [userId], references: [id])
+}
+
+// ============================================================================
+// RELATIONSHIPS - One-to-Many
+// ============================================================================
+
+/// TEST: One-to-many (has many side) - uses many() with back-reference FK
 model Post {
-  id        String   @id @default(uuid())
-  title     String
-  content   String?
-  published Boolean  @default(false)
-  authorId  String
-  author    User     @relation(fields: [authorId], references: [id])
+  id       String    @id @default(uuid())
+  title    String
+  authorId String
+  author   User      @relation(fields: [authorId], references: [id])
+  comments Comment[]
+}
+
+/// TEST: One-to-many (belongs to side)
+model Comment {
+  id     String @id @default(uuid())
+  text   String
+  postId String
+  post   Post   @relation(fields: [postId], references: [id])
+}
+
+// ============================================================================
+// RELATIONSHIPS - Many-to-Many (Implicit)
+// ============================================================================
+
+/// TEST: Implicit M:N → creates _ArticleToTag join table with A/B columns
+model Article {
+  id   String @id @default(uuid())
+  name String
+  tags Tag[]
+}
+
+/// TEST: Implicit M:N (other side) → chained relationship through join table
+model Tag {
+  id       String    @id @default(uuid())
+  name     String
+  articles Article[]
+}
+
+// ============================================================================
+// RELATIONSHIPS - Many-to-Many (Explicit with extra data)
+// ============================================================================
+
+/// TEST: Explicit M:N source - treated as regular 1:N
+model Worker {
+  id     String        @id @default(uuid())
+  name   String
+  skills WorkerSkill[]
+}
+
+/// TEST: Explicit M:N target - treated as regular 1:N
+model Skill {
+  id      String        @id @default(uuid())
+  name    String
+  workers WorkerSkill[]
+}
+
+/// TEST: Explicit junction table with extra fields (proficiency)
+model WorkerSkill {
+  id          String @id @default(uuid())
+  proficiency Int    @default(1)
+  workerId    String
+  worker      Worker @relation(fields: [workerId], references: [id])
+  skillId     String
+  skill       Skill  @relation(fields: [skillId], references: [id])
+
+  @@unique([workerId, skillId])
+}
+
+// ============================================================================
+// RELATIONSHIPS - Self-Referential
+// ============================================================================
+
+/// TEST: Self-referential 1:N (parent/children tree)
+model Category {
+  id       String     @id @default(uuid())
+  name     String
+  parentId String?
+  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryTree")
+}
+
+/// TEST: Self-referential implicit M:N → creates _BlockList join table
+model SocialUser {
+  id        String       @id @default(uuid())
+  username  String       @unique
+  blocked   SocialUser[] @relation("BlockList")
+  blockedBy SocialUser[] @relation("BlockList")
+}
+
+// ============================================================================
+// RELATIONSHIPS - Composite Foreign Keys
+// ============================================================================
+
+/// TEST: Parent with composite PK for FK reference
+model Tenant {
+  id     String        @id @default(uuid())
+  name   String
+  config TenantConfig?
+}
+
+/// TEST: Composite FK relationship
+model TenantConfig {
+  id       String @id @default(uuid())
+  settings Json
+  tenantId String @unique
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+}
+
+// ============================================================================
+// RELATIONSHIPS - Multiple relations to same model
+// ============================================================================
+
+/// TEST: Model with multiple relations to same target (creator vs assignee)
+model Task {
+  id         String  @id @default(uuid())
+  title      String
+  creatorId  String
+  creator    Member  @relation("TaskCreator", fields: [creatorId], references: [id])
+  assigneeId String?
+  assignee   Member? @relation("TaskAssignee", fields: [assigneeId], references: [id])
+}
+
+/// TEST: Target of multiple named relations
+model Member {
+  id            String @id @default(uuid())
+  name          String
+  createdTasks  Task[] @relation("TaskCreator")
+  assignedTasks Task[] @relation("TaskAssignee")
+}
+
+// ============================================================================
+// ENUMS IN FIELDS
+// ============================================================================
+
+/// TEST: Enum field → enumeration<EnumName>()
+/// TEST: Enum array field → json<EnumName[]>()
+model EnumFields {
+  id       String   @id @default(uuid())
+  role     Role
+  statuses Status[]
+}
+
+// ============================================================================
+// NATIVE DATABASE TYPES - Tests @db.* attributes (mapped to base type)
+// ============================================================================
+
+/// TEST: Native types → all map to base Zero types
+model NativeTypes {
+  id        String   @id @default(uuid()) @db.Uuid
+  varchar   String   @db.VarChar(255)
+  text      String   @db.Text
+  smallInt  Int      @db.SmallInt
+  decimal   Decimal  @db.Decimal(10, 2)
+  timestamp DateTime @db.Timestamp(6)
+  jsonb     Json     @db.JsonB
+}
+
+// ============================================================================
+// EXCLUDED MODEL - Tests excludeTables config
+// ============================================================================
+
+/// TEST: Model in excludeTables → should NOT appear in generated schema
+model ExcludedModel {
+  id     String @id @default(uuid())
+  secret String
+}
+
+// ============================================================================
+// EDGE CASES
+// ============================================================================
+
+/// TEST: Minimal model (just ID) → basic table generation
+model MinimalModel {
+  id String @id
+}
+
+/// TEST: Reserved SQL keywords as field names with @map
+model ReservedWords {
+  id     String @id @default(uuid())
+  select String @map("select_field")
+  from   String @map("from_field")
+  where  String @map("where_field")
 }
