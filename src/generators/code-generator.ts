@@ -1,4 +1,5 @@
 import type {
+  Config,
   TransformedSchema,
   ZeroModel,
   ZeroRelationship,
@@ -6,13 +7,17 @@ import type {
   ZeroTypeMapping,
 } from '../types';
 
-function generateImports(schema: TransformedSchema): string {
+function generateImports(schema: TransformedSchema, config: Config): string {
   const usedImports = new Set<string>();
 
   // These are always used
   usedImports.add('table');
   usedImports.add('createSchema');
-  usedImports.add('createBuilder');
+
+  // Only add createBuilder if not skipped
+  if (!config.skipBuilder) {
+    usedImports.add('createBuilder');
+  }
 
   // Check which type functions are used in the schema
   schema.models.forEach(model => {
@@ -150,7 +155,7 @@ ${relationshipsStr}
   return filteredRelationships.length > 0 ? filteredRelationships.join('') : '';
 }
 
-function generateSchema(schema: TransformedSchema): string {
+function generateSchema(schema: TransformedSchema, config: Config): string {
   let output = '/**\n';
   output += ' * The Zero schema object.\n';
   output +=
@@ -178,6 +183,15 @@ function generateSchema(schema: TransformedSchema): string {
     output += '  ],\n';
   }
 
+  // Add legacy options if enabled
+  if (config.enableLegacyMutators) {
+    output += '  enableLegacyMutators: true,\n';
+  }
+
+  if (config.enableLegacyQueries) {
+    output += '  enableLegacyQueries: true,\n';
+  }
+
   output += '});\n\n';
 
   // Add types
@@ -188,36 +202,42 @@ function generateSchema(schema: TransformedSchema): string {
   output += ' */\n';
   output += 'export type Schema = typeof schema;\n';
 
-  output += '/**\n';
-  output += ' * Represents the ZQL query builder.\n';
-  output +=
-    ' * This type is auto-generated from your Prisma schema definition.\n';
-  output += ' */\n';
-  output += 'export const zql = createBuilder(schema);\n';
+  // Only generate builder if not skipped
+  if (!config.skipBuilder) {
+    output += '/**\n';
+    output += ' * Represents the ZQL query builder.\n';
+    output +=
+      ' * This type is auto-generated from your Prisma schema definition.\n';
+    output += ' */\n';
+    output += 'export const zql = createBuilder(schema);\n';
 
-  output += '/**\n';
-  output += ' * Represents the Zero schema query builder.\n';
-  output +=
-    ' * This type is auto-generated from your Prisma schema definition.\n';
-  output += ' *\n';
-  output += ' * @deprecated Use `zql` instead.\n';
-  output += ' */\n';
-  output += 'export const builder = zql;\n';
+    output += '/**\n';
+    output += ' * Represents the Zero schema query builder.\n';
+    output +=
+      ' * This type is auto-generated from your Prisma schema definition.\n';
+    output += ' *\n';
+    output += ' * @deprecated Use `zql` instead.\n';
+    output += ' */\n';
+    output += 'export const builder = zql;\n';
+  }
 
-  output += '/** Defines the default types for Zero */\n';
-  output += 'declare module "@rocicorp/zero" {\n';
-  output += '  interface DefaultTypes {\n';
-  output += '    schema: Schema;\n';
-  output += '  }\n';
-  output += '}\n';
+  // Only generate declare module if not skipped
+  if (!config.skipDeclare) {
+    output += '/** Defines the default types for Zero */\n';
+    output += 'declare module "@rocicorp/zero" {\n';
+    output += '  interface DefaultTypes {\n';
+    output += '    schema: Schema;\n';
+    output += '  }\n';
+    output += '}\n';
+  }
 
   return output;
 }
 
-export function generateCode(schema: TransformedSchema): string {
+export function generateCode(schema: TransformedSchema, config: Config): string {
   let output = `${HEADER_PREFIX}\n\n`;
 
-  output += generateImports(schema);
+  output += generateImports(schema, config);
 
   output += generateUnionTypes(schema);
 
@@ -227,7 +247,7 @@ export function generateCode(schema: TransformedSchema): string {
 
   output += generateRelationships(schema.models);
 
-  output += generateSchema(schema);
+  output += generateSchema(schema, config);
 
   return output;
 }

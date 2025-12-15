@@ -6,6 +6,10 @@ export type Config = {
   resolvePrettierConfig: boolean;
   camelCase: boolean;
   excludeTables?: string[];
+  skipBuilder?: boolean;
+  skipDeclare?: boolean;
+  enableLegacyMutators?: boolean;
+  enableLegacyQueries?: boolean;
 };
 
 export type ZeroTypeMapping = {
