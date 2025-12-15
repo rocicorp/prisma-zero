@@ -8,6 +8,10 @@ generator zero {
   prettier      = true
   // camelCase     = true
   excludeTables = ["ExcludedModel"]
+  // skipBuilder   = true
+  skipDeclare   = true
+  // enableLegacyMutators = true
+  // enableLegacyQueries = true
 }
 
 // ============================================================================
