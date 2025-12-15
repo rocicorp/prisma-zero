@@ -234,7 +234,10 @@ function generateSchema(schema: TransformedSchema, config: Config): string {
   return output;
 }
 
-export function generateCode(schema: TransformedSchema, config: Config): string {
+export function generateCode(
+  schema: TransformedSchema,
+  config: Config,
+): string {
   let output = `${HEADER_PREFIX}\n\n`;
 
   output += generateImports(schema, config);
