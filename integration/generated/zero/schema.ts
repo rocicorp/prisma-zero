@@ -555,9 +555,3 @@ export const zql = createBuilder(schema);
  * @deprecated Use `zql` instead.
  */
 export const builder = zql;
-/** Defines the default types for Zero */
-declare module '@rocicorp/zero' {
-  interface DefaultTypes {
-    schema: Schema;
-  }
-}

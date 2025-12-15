@@ -24,13 +24,17 @@ export async function onGenerate(options: GeneratorOptions) {
     resolvePrettierConfig: generator.config.resolvePrettierConfig !== 'false', // Default true
     camelCase: generator.config.camelCase === 'true', // Default false
     excludeTables: loadExcludeTables(generator),
+    skipBuilder: generator.config.skipBuilder === 'true', // Default false
+    skipDeclare: generator.config.skipDeclare === 'true', // Default false
+    enableLegacyMutators: generator.config.enableLegacyMutators === 'true', // Default false
+    enableLegacyQueries: generator.config.enableLegacyQueries === 'true', // Default false
   } satisfies Config;
 
   // Transform the schema
   const transformedSchema = transformSchema(dmmf, config);
 
   // Generate code
-  let output = generateCode(transformedSchema);
+  let output = generateCode(transformedSchema, config);
 
   // Apply prettier if configured
   if (config.prettier) {

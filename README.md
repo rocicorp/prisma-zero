@@ -93,6 +93,14 @@ generator zero {
   // Optional list of Prisma Model names you want to exclude from the generated schema
   // This does *not* change tables that replicate to zero-cache - only the types on the client
   excludeTables = ["Posts", "Comments", ...]
+  // When true, skip generating the query builder (`zql` and `builder` exports)
+  skipBuilder = true
+  // When true, skip generating the module augmentation for default types in Zero
+  skipDeclare = true
+  // When true, enable legacy CRUD mutators (sets `enableLegacyMutators` to `true` in the generated schema)
+  enableLegacyMutators = true
+  // When true, enable legacy CRUD queries (sets `enableLegacyQueries` to `true` in the generated schema)
+  enableLegacyQueries = true
 }
 ```
 
