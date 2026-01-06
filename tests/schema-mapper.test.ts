@@ -1,7 +1,7 @@
 import {describe, expect, it} from 'vitest';
 import {transformSchema} from '../src/mappers/schema-mapper';
 import type {Config} from '../src/types';
-import {createField, createMockDMMF, createModel} from './utils';
+import {createEnum, createField, createMockDMMF, createModel} from './utils';
 
 describe('Schema Mapper', () => {
   const baseConfig: Config = {
@@ -10,6 +10,361 @@ describe('Schema Mapper', () => {
     resolvePrettierConfig: false,
     camelCase: false,
   };
+
+  describe('scalar types', () => {
+    it('should map all basic Prisma scalar types correctly', () => {
+      const model = createModel('ScalarTypes', [
+        createField('id', 'String', {isId: true}),
+        createField('str', 'String'),
+        createField('int', 'Int'),
+        createField('float', 'Float'),
+        createField('bool', 'Boolean'),
+        createField('dateTime', 'DateTime'),
+        createField('json', 'Json'),
+        createField('bigInt', 'BigInt'),
+        createField('decimal', 'Decimal'),
+      ]);
+
+      const dmmf = createMockDMMF([model]);
+      const result = transformSchema(dmmf, baseConfig);
+
+      const scalarModel = result.models[0];
+      expect(scalarModel?.columns?.id?.type).toBe('string()');
+      expect(scalarModel?.columns?.str?.type).toBe('string()');
+      expect(scalarModel?.columns?.int?.type).toBe('number()');
+      expect(scalarModel?.columns?.float?.type).toBe('number()');
+      expect(scalarModel?.columns?.bool?.type).toBe('boolean()');
+      expect(scalarModel?.columns?.dateTime?.type).toBe('number()');
+      expect(scalarModel?.columns?.json?.type).toBe('json()');
+      expect(scalarModel?.columns?.bigInt?.type).toBe('number()');
+      expect(scalarModel?.columns?.decimal?.type).toBe('number()');
+    });
+
+    it('should exclude Bytes fields from the schema (unsupported)', () => {
+      const model = createModel('BytesModel', [
+        createField('id', 'String', {isId: true}),
+        createField('data', 'Bytes'),
+        createField('name', 'String'),
+      ]);
+
+      const dmmf = createMockDMMF([model]);
+      const result = transformSchema(dmmf, baseConfig);
+
+      const bytesModel = result.models[0];
+      expect(bytesModel?.columns).toHaveProperty('id');
+      expect(bytesModel?.columns).toHaveProperty('name');
+      expect(bytesModel?.columns).not.toHaveProperty('data');
+    });
+
+    it('should handle optional scalar types correctly', () => {
+      const model = createModel('OptionalTypes', [
+        createField('id', 'String', {isId: true}),
+        createField('str', 'String', {isRequired: false}),
+        createField('int', 'Int', {isRequired: false}),
+        createField('float', 'Float', {isRequired: false}),
+        createField('bool', 'Boolean', {isRequired: false}),
+        createField('dateTime', 'DateTime', {isRequired: false}),
+        createField('json', 'Json', {isRequired: false}),
+        createField('bigInt', 'BigInt', {isRequired: false}),
+        createField('decimal', 'Decimal', {isRequired: false}),
+      ]);
+
+      const dmmf = createMockDMMF([model]);
+      const result = transformSchema(dmmf, baseConfig);
+
+      const optionalModel = result.models[0];
+      expect(optionalModel?.columns?.str?.isOptional).toBe(true);
+      expect(optionalModel?.columns?.int?.isOptional).toBe(true);
+      expect(optionalModel?.columns?.float?.isOptional).toBe(true);
+      expect(optionalModel?.columns?.bool?.isOptional).toBe(true);
+      expect(optionalModel?.columns?.dateTime?.isOptional).toBe(true);
+      expect(optionalModel?.columns?.json?.isOptional).toBe(true);
+      expect(optionalModel?.columns?.bigInt?.isOptional).toBe(true);
+      expect(optionalModel?.columns?.decimal?.isOptional).toBe(true);
+    });
+  });
+
+  describe('array types', () => {
+    it('should map all scalar array types to json with type annotations', () => {
+      const model = createModel('ArrayTypes', [
+        createField('id', 'String', {isId: true}),
+        createField('strings', 'String', {isList: true}),
+        createField('ints', 'Int', {isList: true}),
+        createField('floats', 'Float', {isList: true}),
+        createField('bools', 'Boolean', {isList: true}),
+        createField('dateTimes', 'DateTime', {isList: true}),
+        createField('jsons', 'Json', {isList: true}),
+        createField('bigInts', 'BigInt', {isList: true}),
+        createField('decimals', 'Decimal', {isList: true}),
+      ]);
+
+      const dmmf = createMockDMMF([model]);
+      const result = transformSchema(dmmf, baseConfig);
+
+      const arrayModel = result.models[0];
+      expect(arrayModel?.columns?.strings?.type).toBe('json<string[]>()');
+      expect(arrayModel?.columns?.ints?.type).toBe('json<number[]>()');
+      expect(arrayModel?.columns?.floats?.type).toBe('json<number[]>()');
+      expect(arrayModel?.columns?.bools?.type).toBe('json<boolean[]>()');
+      expect(arrayModel?.columns?.dateTimes?.type).toBe('json<number[]>()');
+      expect(arrayModel?.columns?.jsons?.type).toBe('json<any[]>()');
+      expect(arrayModel?.columns?.bigInts?.type).toBe('json<number[]>()');
+      expect(arrayModel?.columns?.decimals?.type).toBe('json<number[]>()');
+    });
+
+    it('should handle optional array types', () => {
+      const model = createModel('OptionalArrays', [
+        createField('id', 'String', {isId: true}),
+        createField('tags', 'String', {isList: true, isRequired: false}),
+        createField('scores', 'Int', {isList: true, isRequired: false}),
+      ]);
+
+      const dmmf = createMockDMMF([model]);
+      const result = transformSchema(dmmf, baseConfig);
+
+      const optArrayModel = result.models[0];
+      expect(optArrayModel?.columns?.tags?.type).toBe('json<string[]>()');
+      expect(optArrayModel?.columns?.tags?.isOptional).toBe(true);
+      expect(optArrayModel?.columns?.scores?.type).toBe('json<number[]>()');
+      expect(optArrayModel?.columns?.scores?.isOptional).toBe(true);
+    });
+
+    it('should exclude Bytes[] from the schema (unsupported)', () => {
+      const model = createModel('BytesArrayModel', [
+        createField('id', 'String', {isId: true}),
+        createField('data', 'Bytes', {isList: true}),
+        createField('name', 'String'),
+      ]);
+
+      const dmmf = createMockDMMF([model]);
+      const result = transformSchema(dmmf, baseConfig);
+
+      const bytesArrayModel = result.models[0];
+      expect(bytesArrayModel?.columns).toHaveProperty('id');
+      expect(bytesArrayModel?.columns).toHaveProperty('name');
+      expect(bytesArrayModel?.columns).not.toHaveProperty('data');
+    });
+  });
+
+  describe('enum types', () => {
+    it('should map enum fields correctly', () => {
+      const model = createModel('EnumModel', [
+        createField('id', 'String', {isId: true}),
+        createField('role', 'Role', {kind: 'enum'}),
+      ]);
+      const roleEnum = createEnum('Role', ['USER', 'ADMIN']);
+
+      const dmmf = createMockDMMF([model], [roleEnum]);
+      const result = transformSchema(dmmf, baseConfig);
+
+      const enumModel = result.models[0];
+      expect(enumModel?.columns?.role?.type).toBe('enumeration<Role>()');
+    });
+
+    it('should map optional enum fields correctly', () => {
+      const model = createModel('OptionalEnumModel', [
+        createField('id', 'String', {isId: true}),
+        createField('status', 'Status', {kind: 'enum', isRequired: false}),
+      ]);
+      const statusEnum = createEnum('Status', ['ACTIVE', 'INACTIVE']);
+
+      const dmmf = createMockDMMF([model], [statusEnum]);
+      const result = transformSchema(dmmf, baseConfig);
+
+      const enumModel = result.models[0];
+      expect(enumModel?.columns?.status?.type).toBe('enumeration<Status>()');
+      expect(enumModel?.columns?.status?.isOptional).toBe(true);
+    });
+
+    it('should map enum array fields to json', () => {
+      const model = createModel('EnumArrayModel', [
+        createField('id', 'String', {isId: true}),
+        createField('roles', 'Role', {kind: 'enum', isList: true}),
+      ]);
+      const roleEnum = createEnum('Role', ['USER', 'ADMIN', 'MODERATOR']);
+
+      const dmmf = createMockDMMF([model], [roleEnum]);
+      const result = transformSchema(dmmf, baseConfig);
+
+      const enumArrayModel = result.models[0];
+      expect(enumArrayModel?.columns?.roles?.type).toBe('json<Role[]>()');
+    });
+
+    it('should include enums in the result with correct values', () => {
+      const model = createModel('EnumModel', [
+        createField('id', 'String', {isId: true}),
+        createField('role', 'Role', {kind: 'enum'}),
+      ]);
+      const roleEnum = createEnum('Role', ['USER', 'ADMIN']);
+
+      const dmmf = createMockDMMF([model], [roleEnum]);
+      const result = transformSchema(dmmf, baseConfig);
+
+      expect(result.enums).toHaveLength(1);
+      expect(result.enums[0]?.name).toBe('Role');
+      expect(result.enums[0]?.values).toEqual([
+        {name: 'USER', dbName: null},
+        {name: 'ADMIN', dbName: null},
+      ]);
+    });
+
+    it('should handle enums with @map attributes', () => {
+      const model = createModel('MappedEnumModel', [
+        createField('id', 'String', {isId: true}),
+        createField('status', 'Status', {kind: 'enum'}),
+      ]);
+      // Simulate enum with mapped values
+      const statusEnum = {
+        name: 'Status',
+        dbName: null,
+        values: [
+          {name: 'ACTIVE', dbName: 'active'},
+          {name: 'INACTIVE', dbName: 'inactive'},
+        ],
+      };
+
+      const dmmf = createMockDMMF([model], [statusEnum]);
+      const result = transformSchema(dmmf, baseConfig);
+
+      expect(result.enums).toHaveLength(1);
+      expect(result.enums[0]?.values).toEqual([
+        {name: 'ACTIVE', dbName: 'active'},
+        {name: 'INACTIVE', dbName: 'inactive'},
+      ]);
+    });
+
+    it('should handle multiple enums', () => {
+      const model = createModel('MultiEnumModel', [
+        createField('id', 'String', {isId: true}),
+        createField('role', 'Role', {kind: 'enum'}),
+        createField('status', 'Status', {kind: 'enum'}),
+        createField('priority', 'Priority', {kind: 'enum'}),
+      ]);
+      const roleEnum = createEnum('Role', ['USER', 'ADMIN']);
+      const statusEnum = createEnum('Status', ['ACTIVE', 'INACTIVE', 'PENDING']);
+      const priorityEnum = createEnum('Priority', ['LOW', 'MEDIUM', 'HIGH']);
+
+      const dmmf = createMockDMMF([model], [roleEnum, statusEnum, priorityEnum]);
+      const result = transformSchema(dmmf, baseConfig);
+
+      expect(result.enums).toHaveLength(3);
+      expect(result.enums.map(e => e.name).sort()).toEqual([
+        'Priority',
+        'Role',
+        'Status',
+      ]);
+    });
+  });
+
+  describe('native database types', () => {
+    it('should map PostgreSQL native types to their base Zero types', () => {
+      const model = createModel('PostgresNativeTypes', [
+        createField('id', 'String', {isId: true}),
+        // String native types
+        createField('text', 'String'),
+        createField('varchar', 'String'),
+        createField('char', 'String'),
+        createField('uuid', 'String'),
+        createField('xml', 'String'),
+        createField('inet', 'String'),
+        // Int native types
+        createField('integer', 'Int'),
+        createField('smallint', 'Int'),
+        // BigInt native types
+        createField('bigint', 'BigInt'),
+        // Float native types
+        createField('doublePrecision', 'Float'),
+        createField('real', 'Float'),
+        // Decimal native types
+        createField('decimal', 'Decimal'),
+        createField('money', 'Decimal'),
+        // DateTime native types
+        createField('timestamp', 'DateTime'),
+        createField('timestamptz', 'DateTime'),
+        createField('date', 'DateTime'),
+        createField('time', 'DateTime'),
+        // Json native types
+        createField('json', 'Json'),
+        createField('jsonb', 'Json'),
+        // Boolean native types
+        createField('boolean', 'Boolean'),
+      ]);
+
+      const dmmf = createMockDMMF([model]);
+      const result = transformSchema(dmmf, baseConfig);
+
+      const nativeModel = result.models[0];
+      // All String native types map to string()
+      expect(nativeModel?.columns?.text?.type).toBe('string()');
+      expect(nativeModel?.columns?.varchar?.type).toBe('string()');
+      expect(nativeModel?.columns?.char?.type).toBe('string()');
+      expect(nativeModel?.columns?.uuid?.type).toBe('string()');
+      expect(nativeModel?.columns?.xml?.type).toBe('string()');
+      expect(nativeModel?.columns?.inet?.type).toBe('string()');
+      // All Int native types map to number()
+      expect(nativeModel?.columns?.integer?.type).toBe('number()');
+      expect(nativeModel?.columns?.smallint?.type).toBe('number()');
+      // All BigInt native types map to number()
+      expect(nativeModel?.columns?.bigint?.type).toBe('number()');
+      // All Float native types map to number()
+      expect(nativeModel?.columns?.doublePrecision?.type).toBe('number()');
+      expect(nativeModel?.columns?.real?.type).toBe('number()');
+      // All Decimal native types map to number()
+      expect(nativeModel?.columns?.decimal?.type).toBe('number()');
+      expect(nativeModel?.columns?.money?.type).toBe('number()');
+      // All DateTime native types map to number()
+      expect(nativeModel?.columns?.timestamp?.type).toBe('number()');
+      expect(nativeModel?.columns?.timestamptz?.type).toBe('number()');
+      expect(nativeModel?.columns?.date?.type).toBe('number()');
+      expect(nativeModel?.columns?.time?.type).toBe('number()');
+      // All Json native types map to json()
+      expect(nativeModel?.columns?.json?.type).toBe('json()');
+      expect(nativeModel?.columns?.jsonb?.type).toBe('json()');
+      // Boolean native types map to boolean()
+      expect(nativeModel?.columns?.boolean?.type).toBe('boolean()');
+    });
+
+  });
+
+  describe('@updatedAt attribute', () => {
+    it('should include fields with @updatedAt attribute', () => {
+      const model = createModel('TimestampModel', [
+        createField('id', 'String', {isId: true}),
+        createField('createdAt', 'DateTime'),
+        createField('updatedAt', 'DateTime', {isUpdatedAt: true}),
+        createField('name', 'String'),
+      ]);
+
+      const dmmf = createMockDMMF([model]);
+      const result = transformSchema(dmmf, baseConfig);
+
+      const timestampModel = result.models[0];
+      expect(timestampModel?.columns?.createdAt?.type).toBe('number()');
+      expect(timestampModel?.columns?.updatedAt?.type).toBe('number()');
+    });
+  });
+
+  describe('@default attribute handling', () => {
+    it('should include fields with various @default values', () => {
+      const model = createModel('DefaultsModel', [
+        createField('id', 'String', {isId: true, hasDefaultValue: true}),
+        createField('createdAt', 'DateTime', {hasDefaultValue: true}),
+        createField('isActive', 'Boolean', {hasDefaultValue: true}),
+        createField('count', 'Int', {hasDefaultValue: true}),
+        createField('name', 'String', {hasDefaultValue: true}),
+      ]);
+
+      const dmmf = createMockDMMF([model]);
+      const result = transformSchema(dmmf, baseConfig);
+
+      const defaultsModel = result.models[0];
+      expect(defaultsModel?.columns?.id?.type).toBe('string()');
+      expect(defaultsModel?.columns?.createdAt?.type).toBe('number()');
+      expect(defaultsModel?.columns?.isActive?.type).toBe('boolean()');
+      expect(defaultsModel?.columns?.count?.type).toBe('number()');
+      expect(defaultsModel?.columns?.name?.type).toBe('string()');
+    });
+  });
 
   describe('excludeTables', () => {
     it('should exclude specified tables from the schema', () => {
@@ -510,6 +865,24 @@ describe('Schema Mapper', () => {
       expect(productModel?.columns?.categories?.type).toBe(
         'json<Category[]>()',
       );
+    });
+  });
+
+  describe('unsupported columns', () => {
+    it('should skip bytea and unsupported columns', () => {
+      const model = createModel('Asset', [
+        createField('id', 'String', {isId: true}),
+        createField('payload', 'Bytes'),
+        createField('legacy', 'LegacyType', {kind: 'unsupported'}),
+      ]);
+
+      const dmmf = createMockDMMF([model]);
+      const result = transformSchema(dmmf, baseConfig);
+
+      const assetModel = result.models[0];
+      expect(assetModel?.columns).toHaveProperty('id');
+      expect(assetModel?.columns).not.toHaveProperty('payload');
+      expect(assetModel?.columns).not.toHaveProperty('legacy');
     });
   });
 

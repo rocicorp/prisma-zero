@@ -40,7 +40,11 @@ CREATE TABLE "ArrayTypes" (
     "id" TEXT NOT NULL,
     "strings" TEXT[],
     "ints" INTEGER[],
+    "floats" DOUBLE PRECISION[],
     "bools" BOOLEAN[],
+    "dateTimes" TIMESTAMP(3)[],
+    "bigInts" BIGINT[],
+    "decimals" DECIMAL(65,30)[],
     "enums" "Role"[],
     "jsonArray" JSONB[],
 
@@ -230,6 +234,58 @@ CREATE TABLE "NativeTypes" (
     "jsonb" JSONB NOT NULL,
 
     CONSTRAINT "NativeTypes_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "PostgresNativeTypes" (
+    "id" UUID NOT NULL,
+    "text" TEXT NOT NULL,
+    "varchar255" VARCHAR(255) NOT NULL,
+    "char10" CHAR(10) NOT NULL,
+    "xml" XML NOT NULL,
+    "inet" INET NOT NULL,
+    "bit8" BIT(8) NOT NULL,
+    "varbit" VARBIT NOT NULL,
+    "integer" INTEGER NOT NULL,
+    "smallint" SMALLINT NOT NULL,
+    "oid" OID NOT NULL,
+    "bigint" BIGINT NOT NULL,
+    "doublePrecision" DOUBLE PRECISION NOT NULL,
+    "real" REAL NOT NULL,
+    "decimal102" DECIMAL(10,2) NOT NULL,
+    "money" MONEY NOT NULL,
+    "timestamp6" TIMESTAMP(6) NOT NULL,
+    "timestamptz6" TIMESTAMPTZ(6) NOT NULL,
+    "date" DATE NOT NULL,
+    "time6" TIME(6) NOT NULL,
+    "timetz6" TIMETZ(6) NOT NULL,
+    "json" JSON NOT NULL,
+    "jsonb" JSONB NOT NULL,
+    "boolean" BOOLEAN NOT NULL,
+
+    CONSTRAINT "PostgresNativeTypes_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "TimestampModel" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "TimestampModel_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "DefaultFunctions" (
+    "id" TEXT NOT NULL,
+    "cuidField" TEXT NOT NULL,
+    "nowField" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "intDefault" INTEGER NOT NULL DEFAULT 0,
+    "boolDefault" BOOLEAN NOT NULL DEFAULT false,
+    "strDefault" TEXT NOT NULL DEFAULT 'default',
+
+    CONSTRAINT "DefaultFunctions_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable

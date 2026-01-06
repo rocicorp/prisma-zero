@@ -28,7 +28,6 @@ export const scalarTypesTable = table('ScalarTypes')
     json: json(),
     bigInt: number(),
     decimal: number(),
-    bytes: string(),
   })
   .primaryKey('id');
 
@@ -48,7 +47,11 @@ export const arrayTypesTable = table('ArrayTypes')
     id: string(),
     strings: json<string[]>(),
     ints: json<number[]>(),
+    floats: json<number[]>(),
     bools: json<boolean[]>(),
+    dateTimes: json<number[]>(),
+    bigInts: json<number[]>(),
+    decimals: json<number[]>(),
     enums: json<Role[]>(),
     jsonArray: json<any[]>(),
   })
@@ -217,6 +220,55 @@ export const nativeTypesTable = table('NativeTypes')
     decimal: number(),
     timestamp: number(),
     jsonb: json(),
+  })
+  .primaryKey('id');
+
+export const postgresNativeTypesTable = table('PostgresNativeTypes')
+  .columns({
+    id: string(),
+    text: string(),
+    varchar255: string(),
+    char10: string(),
+    xml: string(),
+    inet: string(),
+    bit8: string(),
+    varbit: string(),
+    integer: number(),
+    smallint: number(),
+    oid: number(),
+    bigint: number(),
+    doublePrecision: number(),
+    real: number(),
+    decimal102: number(),
+    money: number(),
+    timestamp6: number(),
+    timestamptz6: number(),
+    date: number(),
+    time6: number(),
+    timetz6: number(),
+    json: json(),
+    jsonb: json(),
+    boolean: boolean(),
+  })
+  .primaryKey('id');
+
+export const timestampModelTable = table('TimestampModel')
+  .columns({
+    id: string(),
+    name: string(),
+    createdAt: number(),
+    updatedAt: number(),
+  })
+  .primaryKey('id');
+
+export const defaultFunctionsTable = table('DefaultFunctions')
+  .columns({
+    id: string(),
+    cuidField: string(),
+    nowField: number(),
+    intDefault: number(),
+    boolDefault: boolean(),
+    strDefault: string(),
   })
   .primaryKey('id');
 
@@ -512,6 +564,9 @@ export const schema = createSchema({
     memberTable,
     enumFieldsTable,
     nativeTypesTable,
+    postgresNativeTypesTable,
+    timestampModelTable,
+    defaultFunctionsTable,
     minimalModelTable,
     reservedWordsTable,
     _articleToTagTable,

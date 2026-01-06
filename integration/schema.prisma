@@ -40,7 +40,7 @@ enum Status {
 /// - Boolean → boolean()
 /// - DateTime → number() (timestamp)
 /// - Json → json()
-/// - Bytes → string() (fallback)
+/// - Bytes → excluded (unsupported currently)
 model ScalarTypes {
   id       String   @id @default(uuid())
   str      String
@@ -69,7 +69,11 @@ model ArrayTypes {
   id        String    @id @default(uuid())
   strings   String[]
   ints      Int[]
+  floats    Float[]
   bools     Boolean[]
+  dateTimes DateTime[]
+  bigInts   BigInt[]
+  decimals  Decimal[]
   enums     Role[]
   jsonArray Json[]
 }
@@ -290,6 +294,60 @@ model NativeTypes {
   decimal   Decimal  @db.Decimal(10, 2)
   timestamp DateTime @db.Timestamp(6)
   jsonb     Json     @db.JsonB
+}
+
+/// TEST: Comprehensive PostgreSQL native types → all map to base Zero types
+model PostgresNativeTypes {
+  id             String   @id @default(uuid()) @db.Uuid
+  // String native types
+  text           String   @db.Text
+  varchar255     String   @db.VarChar(255)
+  char10         String   @db.Char(10)
+  xml            String   @db.Xml
+  inet           String   @db.Inet
+  bit8           String   @db.Bit(8)
+  varbit         String   @db.VarBit
+  // Integer native types
+  integer        Int      @db.Integer
+  smallint       Int      @db.SmallInt
+  oid            Int      @db.Oid
+  // BigInt native types
+  bigint         BigInt   @db.BigInt
+  // Float native types
+  doublePrecision Float   @db.DoublePrecision
+  real           Float    @db.Real
+  // Decimal native types
+  decimal102     Decimal  @db.Decimal(10, 2)
+  money          Decimal  @db.Money
+  // DateTime native types
+  timestamp6     DateTime @db.Timestamp(6)
+  timestamptz6   DateTime @db.Timestamptz(6)
+  date           DateTime @db.Date
+  time6          DateTime @db.Time(6)
+  timetz6        DateTime @db.Timetz(6)
+  // Json native types
+  json           Json     @db.Json
+  jsonb          Json     @db.JsonB
+  // Boolean native type
+  boolean        Boolean  @db.Boolean
+}
+
+/// TEST: @updatedAt attribute → DateTime field auto-updated
+model TimestampModel {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// TEST: Various @default functions
+model DefaultFunctions {
+  id         String   @id @default(uuid())      // uuid() default
+  cuidField  String   @default(cuid())          // cuid() default
+  nowField   DateTime @default(now())           // now() default
+  intDefault Int      @default(0)               // static default
+  boolDefault Boolean @default(false)           // static default
+  strDefault String   @default("default")       // static default
 }
 
 // ============================================================================

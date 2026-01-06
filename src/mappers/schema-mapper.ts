@@ -4,6 +4,7 @@ import type {
   ZeroRelationship,
   TransformedSchema,
   Config,
+  ZeroTypeMapping,
 } from '../types';
 import {mapPrismaTypeToZero} from './type-mapper';
 import camelCase from 'camelcase';
@@ -107,6 +108,13 @@ function createImplicitManyToManyModel(
   const columnAType = mapPrismaTypeToZero(idFieldA);
   const columnBType = mapPrismaTypeToZero(idFieldB);
 
+  if (!columnAType || !columnBType) {
+    const unsupportedModel = !columnAType ? modelA : modelB;
+    throw new Error(
+      `Implicit relation ${relationName ?? 'unknown'}: Model ${unsupportedModel.name} has an unsupported @id field.`,
+    );
+  }
+
   return {
     tableName,
     originalTableName,
@@ -140,6 +148,19 @@ function mapRelationships(
   config: Config,
 ): Record<string, ZeroRelationship> {
   const relationships: Record<string, ZeroRelationship> = {};
+
+  const isSupportedField = (target: DMMF.Model, fieldName: string): boolean => {
+    const field = target.fields.find(f => f.name === fieldName);
+    if (!field) {
+      return true;
+    }
+    return mapPrismaTypeToZero(field) !== null;
+  };
+
+  const areFieldsSupported = (
+    target: DMMF.Model,
+    fieldNames: string[],
+  ): boolean => fieldNames.every(fieldName => isSupportedField(target, fieldName));
 
   model.fields
     .filter(field => field.relationName)
@@ -189,18 +210,33 @@ function mapRelationships(
               : true
             : model.name === modelA.name;
 
+          const sourceField = [
+            model.fields.find(f => f.isId)?.name || 'id',
+          ];
+          const destField = [isModelA ? 'A' : 'B'];
+          const targetDestField = [
+            targetModel.fields.find(f => f.isId)?.name || 'id',
+          ];
+
+          if (
+            !areFieldsSupported(model, sourceField) ||
+            !areFieldsSupported(targetModel, targetDestField)
+          ) {
+            return;
+          }
+
           // Create a chained relationship through the join table
           relationships[field.name] = {
             type: 'many',
             chain: [
               {
-                sourceField: [model.fields.find(f => f.isId)?.name || 'id'],
-                destField: [isModelA ? 'A' : 'B'],
+                sourceField,
+                destField,
                 destSchema: getZeroTableName(joinTableName),
               },
               {
                 sourceField: [isModelA ? 'B' : 'A'],
-                destField: [targetModel.fields.find(f => f.isId)?.name || 'id'],
+                destField: targetDestField,
                 destSchema: getZeroTableName(targetModel.name),
               },
             ],
@@ -215,6 +251,13 @@ function mapRelationships(
           const destFields = backReference?.relationFromFields
             ? ensureStringArray(backReference.relationFromFields)
             : [];
+
+          if (
+            !areFieldsSupported(model, sourceFields) ||
+            !areFieldsSupported(targetModel, destFields)
+          ) {
+            return;
+          }
 
           relationships[field.name] = {
             sourceField: sourceFields,
@@ -240,6 +283,13 @@ function mapRelationships(
           destFields = ensureStringArray(backReference.relationFromFields);
         }
 
+        if (
+          !areFieldsSupported(model, sourceFields) ||
+          !areFieldsSupported(targetModel, destFields)
+        ) {
+          return;
+        }
+
         relationships[field.name] = {
           sourceField: sourceFields,
           destField: destFields,
@@ -257,18 +307,36 @@ function mapModel(
   dmmf: DMMF.Document,
   config: Config,
 ): ZeroModel {
-  const columns: Record<string, ReturnType<typeof mapPrismaTypeToZero>> = {};
+  const columns: Record<string, ZeroTypeMapping> = {};
 
   model.fields
     .filter(field => !field.relationName)
     .forEach(field => {
-      columns[field.name] = mapPrismaTypeToZero(field);
+      const mapping = mapPrismaTypeToZero(field);
+      if (!mapping) {
+        return;
+      }
+      columns[field.name] = mapping;
     });
 
   const idField = model.fields.find(f => f.isId)?.name;
   const primaryKey = model.primaryKey?.fields || (idField ? [idField] : []);
   if (!primaryKey[0]) {
     throw new Error(`No primary key found for ${model.name}`);
+  }
+
+  const unsupportedPrimaryKeys = primaryKey.filter(fieldName => {
+    const field = model.fields.find(f => f.name === fieldName);
+    if (!field) {
+      return false;
+    }
+    return mapPrismaTypeToZero(field) === null;
+  });
+
+  if (unsupportedPrimaryKeys.length > 0) {
+    throw new Error(
+      `Primary key field(s) ${unsupportedPrimaryKeys.join(', ')} in ${model.name} are not supported by Zero.`,
+    );
   }
 
   // Use the Prisma model name (optionally camelCased) for the Zero table name.
