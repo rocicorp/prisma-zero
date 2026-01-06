@@ -241,10 +241,17 @@ describe('Schema Mapper', () => {
         createField('priority', 'Priority', {kind: 'enum'}),
       ]);
       const roleEnum = createEnum('Role', ['USER', 'ADMIN']);
-      const statusEnum = createEnum('Status', ['ACTIVE', 'INACTIVE', 'PENDING']);
+      const statusEnum = createEnum('Status', [
+        'ACTIVE',
+        'INACTIVE',
+        'PENDING',
+      ]);
       const priorityEnum = createEnum('Priority', ['LOW', 'MEDIUM', 'HIGH']);
 
-      const dmmf = createMockDMMF([model], [roleEnum, statusEnum, priorityEnum]);
+      const dmmf = createMockDMMF(
+        [model],
+        [roleEnum, statusEnum, priorityEnum],
+      );
       const result = transformSchema(dmmf, baseConfig);
 
       expect(result.enums).toHaveLength(3);
@@ -323,7 +330,6 @@ describe('Schema Mapper', () => {
       // Boolean native types map to boolean()
       expect(nativeModel?.columns?.boolean?.type).toBe('boolean()');
     });
-
   });
 
   describe('@updatedAt attribute', () => {

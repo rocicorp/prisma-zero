@@ -82,13 +82,17 @@ describe('mapPrismaTypeToZero', () => {
     });
 
     it('should map String with @db.VarChar(n) to string()', () => {
-      const field = createField('varchar', 'String', {nativeType: ['VarChar', ['255']]});
+      const field = createField('varchar', 'String', {
+        nativeType: ['VarChar', ['255']],
+      });
       const result = mapPrismaTypeToZero(field);
       expect(result?.type).toBe('string()');
     });
 
     it('should map String with @db.Char(n) to string()', () => {
-      const field = createField('char', 'String', {nativeType: ['Char', ['10']]});
+      const field = createField('char', 'String', {
+        nativeType: ['Char', ['10']],
+      });
       const result = mapPrismaTypeToZero(field);
       expect(result?.type).toBe('string()');
     });
@@ -112,7 +116,9 @@ describe('mapPrismaTypeToZero', () => {
     });
 
     it('should map String with @db.Citext to string()', () => {
-      const field = createField('citext', 'String', {nativeType: ['Citext', []]});
+      const field = createField('citext', 'String', {
+        nativeType: ['Citext', []],
+      });
       const result = mapPrismaTypeToZero(field);
       expect(result?.type).toBe('string()');
     });
@@ -124,20 +130,26 @@ describe('mapPrismaTypeToZero', () => {
     });
 
     it('should map String with @db.VarBit to string()', () => {
-      const field = createField('varbit', 'String', {nativeType: ['VarBit', []]});
+      const field = createField('varbit', 'String', {
+        nativeType: ['VarBit', []],
+      });
       const result = mapPrismaTypeToZero(field);
       expect(result?.type).toBe('string()');
     });
 
     // Integer native types
     it('should map Int with @db.Integer to number()', () => {
-      const field = createField('integer', 'Int', {nativeType: ['Integer', []]});
+      const field = createField('integer', 'Int', {
+        nativeType: ['Integer', []],
+      });
       const result = mapPrismaTypeToZero(field);
       expect(result?.type).toBe('number()');
     });
 
     it('should map Int with @db.SmallInt to number()', () => {
-      const field = createField('smallint', 'Int', {nativeType: ['SmallInt', []]});
+      const field = createField('smallint', 'Int', {
+        nativeType: ['SmallInt', []],
+      });
       const result = mapPrismaTypeToZero(field);
       expect(result?.type).toBe('number()');
     });
@@ -150,14 +162,18 @@ describe('mapPrismaTypeToZero', () => {
 
     // BigInt native types
     it('should map BigInt with @db.BigInt to number()', () => {
-      const field = createField('bigint', 'BigInt', {nativeType: ['BigInt', []]});
+      const field = createField('bigint', 'BigInt', {
+        nativeType: ['BigInt', []],
+      });
       const result = mapPrismaTypeToZero(field);
       expect(result?.type).toBe('number()');
     });
 
     // Float native types
     it('should map Float with @db.DoublePrecision to number()', () => {
-      const field = createField('doublePrecision', 'Float', {nativeType: ['DoublePrecision', []]});
+      const field = createField('doublePrecision', 'Float', {
+        nativeType: ['DoublePrecision', []],
+      });
       const result = mapPrismaTypeToZero(field);
       expect(result?.type).toBe('number()');
     });
@@ -170,26 +186,34 @@ describe('mapPrismaTypeToZero', () => {
 
     // Decimal native types
     it('should map Decimal with @db.Decimal(p,s) to number()', () => {
-      const field = createField('decimal', 'Decimal', {nativeType: ['Decimal', ['10', '2']]});
+      const field = createField('decimal', 'Decimal', {
+        nativeType: ['Decimal', ['10', '2']],
+      });
       const result = mapPrismaTypeToZero(field);
       expect(result?.type).toBe('number()');
     });
 
     it('should map Decimal with @db.Money to number()', () => {
-      const field = createField('money', 'Decimal', {nativeType: ['Money', []]});
+      const field = createField('money', 'Decimal', {
+        nativeType: ['Money', []],
+      });
       const result = mapPrismaTypeToZero(field);
       expect(result?.type).toBe('number()');
     });
 
     // DateTime native types
     it('should map DateTime with @db.Timestamp(n) to number()', () => {
-      const field = createField('timestamp', 'DateTime', {nativeType: ['Timestamp', ['6']]});
+      const field = createField('timestamp', 'DateTime', {
+        nativeType: ['Timestamp', ['6']],
+      });
       const result = mapPrismaTypeToZero(field);
       expect(result?.type).toBe('number()');
     });
 
     it('should map DateTime with @db.Timestamptz(n) to number()', () => {
-      const field = createField('timestamptz', 'DateTime', {nativeType: ['Timestamptz', ['6']]});
+      const field = createField('timestamptz', 'DateTime', {
+        nativeType: ['Timestamptz', ['6']],
+      });
       const result = mapPrismaTypeToZero(field);
       expect(result?.type).toBe('number()');
     });
@@ -201,13 +225,17 @@ describe('mapPrismaTypeToZero', () => {
     });
 
     it('should map DateTime with @db.Time(n) to number()', () => {
-      const field = createField('time', 'DateTime', {nativeType: ['Time', ['6']]});
+      const field = createField('time', 'DateTime', {
+        nativeType: ['Time', ['6']],
+      });
       const result = mapPrismaTypeToZero(field);
       expect(result?.type).toBe('number()');
     });
 
     it('should map DateTime with @db.Timetz(n) to number()', () => {
-      const field = createField('timetz', 'DateTime', {nativeType: ['Timetz', ['6']]});
+      const field = createField('timetz', 'DateTime', {
+        nativeType: ['Timetz', ['6']],
+      });
       const result = mapPrismaTypeToZero(field);
       expect(result?.type).toBe('number()');
     });
@@ -227,7 +255,9 @@ describe('mapPrismaTypeToZero', () => {
 
     // Boolean native types
     it('should map Boolean with @db.Boolean to boolean()', () => {
-      const field = createField('boolean', 'Boolean', {nativeType: ['Boolean', []]});
+      const field = createField('boolean', 'Boolean', {
+        nativeType: ['Boolean', []],
+      });
       const result = mapPrismaTypeToZero(field);
       expect(result?.type).toBe('boolean()');
     });
@@ -249,14 +279,20 @@ describe('mapPrismaTypeToZero', () => {
     });
 
     it('should handle optional enum fields', () => {
-      const field = createField('role', 'UserRole', {kind: 'enum', isRequired: false});
+      const field = createField('role', 'UserRole', {
+        kind: 'enum',
+        isRequired: false,
+      });
       const result = mapPrismaTypeToZero(field);
       expect(result?.type).toBe('enumeration<UserRole>()');
       expect(result?.isOptional).toBe(true);
     });
 
     it('should map enum array types correctly', () => {
-      const field = createField('roles', 'UserRole', {kind: 'enum', isList: true});
+      const field = createField('roles', 'UserRole', {
+        kind: 'enum',
+        isList: true,
+      });
       const result = mapPrismaTypeToZero(field);
       expect(result?.type).toBe('json<UserRole[]>()');
       expect(result?.isOptional).toBe(false);
@@ -391,7 +427,10 @@ describe('mapPrismaTypeToZero', () => {
     });
 
     it('should handle optional array fields correctly', () => {
-      const field = createField('tags', 'String', {isList: true, isRequired: false});
+      const field = createField('tags', 'String', {
+        isList: true,
+        isRequired: false,
+      });
       const result = mapPrismaTypeToZero(field);
       expect(result?.type).toBe('json<string[]>()');
       expect(result?.isOptional).toBe(true);

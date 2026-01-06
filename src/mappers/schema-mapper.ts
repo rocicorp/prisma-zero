@@ -160,7 +160,8 @@ function mapRelationships(
   const areFieldsSupported = (
     target: DMMF.Model,
     fieldNames: string[],
-  ): boolean => fieldNames.every(fieldName => isSupportedField(target, fieldName));
+  ): boolean =>
+    fieldNames.every(fieldName => isSupportedField(target, fieldName));
 
   model.fields
     .filter(field => field.relationName)
@@ -210,9 +211,7 @@ function mapRelationships(
               : true
             : model.name === modelA.name;
 
-          const sourceField = [
-            model.fields.find(f => f.isId)?.name || 'id',
-          ];
+          const sourceField = [model.fields.find(f => f.isId)?.name || 'id'];
           const destField = [isModelA ? 'A' : 'B'];
           const targetDestField = [
             targetModel.fields.find(f => f.isId)?.name || 'id',

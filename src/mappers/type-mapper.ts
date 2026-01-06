@@ -23,9 +23,7 @@ const ARRAY_TS_TYPE_MAP: Record<string, string> = {
   Decimal: 'number[]',
 };
 
-export function mapPrismaTypeToZero(
-  field: DMMF.Field,
-): ZeroTypeMapping | null {
+export function mapPrismaTypeToZero(field: DMMF.Field): ZeroTypeMapping | null {
   if (field.kind === 'unsupported') {
     return null;
   }
@@ -37,9 +35,7 @@ export function mapPrismaTypeToZero(
   // Handle array types - map them to json() since Zero doesn't support arrays natively
   if (field.isList) {
     const tsType =
-      field.kind === 'enum'
-        ? `${field.type}[]`
-        : ARRAY_TS_TYPE_MAP[field.type];
+      field.kind === 'enum' ? `${field.type}[]` : ARRAY_TS_TYPE_MAP[field.type];
 
     if (!tsType) {
       return null;
