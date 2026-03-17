@@ -71,6 +71,32 @@ export const userTable = table('User')
   .primaryKey('id');
 ```
 
+## Postgres Time Support
+
+Prisma Postgres `DateTime` native types continue to map to Zero `number()` columns, including `@db.Time` and `@db.Timetz`:
+
+```prisma
+model StoreHours {
+  id       String   @id @default(uuid())
+  opensAt  DateTime @db.Time(6)
+  closesAt DateTime @db.Timetz(6)
+}
+```
+
+The generated Zero schema will include:
+
+```ts
+export const storeHoursTable = table('StoreHours')
+  .columns({
+    id: string(),
+    opensAt: number(),
+    closesAt: number(),
+  })
+  .primaryKey('id');
+```
+
+This generator intentionally keeps `time` and `timetz` fields as plain `number()` columns so they match Zero's existing date/time handling. If your app uses `@db.Time` or `@db.Timetz`, make sure your installed `@rocicorp/zero` version includes upstream support for those Postgres types (`0.26.0+`).
+
 ### Supported Array Types
 
 - **Scalar arrays**: `String[]`, `Int[]`, `Float[]`, `Boolean[]`, `DateTime[]`, `BigInt[]`, `Decimal[]`
