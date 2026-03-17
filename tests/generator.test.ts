@@ -810,6 +810,30 @@ describe('Generator', () => {
         "
       `);
     });
+
+    it('should keep PostgreSQL time and timetz fields as number() columns', async () => {
+      const scheduleModel = createModel('Schedule', [
+        createField('id', 'String', {isId: true}),
+        createField('opensAt', 'DateTime', {
+          nativeType: ['Time', ['6']],
+        }),
+        createField('closesAt', 'DateTime', {
+          nativeType: ['Timetz', ['6']],
+          isRequired: false,
+        }),
+      ]);
+
+      const options = createTestOptions(createMockDMMF([scheduleModel]));
+
+      vi.mocked(fs.readFile).mockRejectedValue(new Error('File not found'));
+
+      await onGenerate(options);
+
+      const content = getWrittenContent(vi.mocked(fs.writeFile).mock.calls);
+
+      expect(content).toContain('opensAt: number(),');
+      expect(content).toContain('closesAt: number().optional(),');
+    });
   });
 });
 
