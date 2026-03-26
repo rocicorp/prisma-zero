@@ -9,7 +9,11 @@ const main = async () => {
     banner: {
       js: `#!/usr/bin/env node`,
     },
-    dts: true,
+    dts: {
+      compilerOptions: {
+        ignoreDeprecations: '6.0',
+      },
+    },
     target: 'node16',
     platform: 'node',
     external: [
