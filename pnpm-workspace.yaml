@@ -1,2 +1,8 @@
 packages:
   - 'integration'
+allowBuilds:
+  '@prisma/engines': true
+  '@rocicorp/zero-sqlite3': true
+  esbuild: true
+  prisma: true
+  protobufjs: true
