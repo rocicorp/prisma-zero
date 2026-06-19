@@ -6,3 +6,6 @@ allowBuilds:
   esbuild: true
   prisma: true
   protobufjs: true
+
+minimumReleaseAgeExclude:
+  - '@rocicorp/zero@1.7.0-canary.3'
