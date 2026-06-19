@@ -267,6 +267,14 @@ CREATE TABLE "PostgresNativeTypes" (
 );
 
 -- CreateTable
+CREATE TABLE "InetPrimaryKey" (
+    "id" INET NOT NULL,
+    "name" TEXT NOT NULL,
+
+    CONSTRAINT "InetPrimaryKey_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "TimestampModel" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,

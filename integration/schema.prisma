@@ -332,6 +332,12 @@ model PostgresNativeTypes {
   boolean        Boolean  @db.Boolean
 }
 
+/// TEST: Text-represented PostgreSQL scalar types can be primary keys
+model InetPrimaryKey {
+  id   String @id @db.Inet
+  name String
+}
+
 /// TEST: @updatedAt attribute → DateTime field auto-updated
 model TimestampModel {
   id        String   @id @default(uuid())
