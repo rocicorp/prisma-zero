@@ -330,6 +330,23 @@ describe('Schema Mapper', () => {
       // Boolean native types map to boolean()
       expect(nativeModel?.columns?.boolean?.type).toBe('boolean()');
     });
+
+    it('should map @db.Inet primary keys to string primary keys', () => {
+      const model = createModel('InetPrimaryKey', [
+        createField('id', 'String', {
+          isId: true,
+          nativeType: ['Inet', []],
+        }),
+        createField('name', 'String'),
+      ]);
+
+      const dmmf = createMockDMMF([model]);
+      const result = transformSchema(dmmf, baseConfig);
+
+      const inetModel = result.models[0];
+      expect(inetModel?.columns?.id?.type).toBe('string()');
+      expect(inetModel?.primaryKey).toEqual(['id']);
+    });
   });
 
   describe('@updatedAt attribute', () => {

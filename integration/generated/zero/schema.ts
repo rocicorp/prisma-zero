@@ -252,6 +252,13 @@ export const postgresNativeTypesTable = table('PostgresNativeTypes')
   })
   .primaryKey('id');
 
+export const inetPrimaryKeyTable = table('InetPrimaryKey')
+  .columns({
+    id: string(),
+    name: string(),
+  })
+  .primaryKey('id');
+
 export const timestampModelTable = table('TimestampModel')
   .columns({
     id: string(),
@@ -565,6 +572,7 @@ export const schema = createSchema({
     enumFieldsTable,
     nativeTypesTable,
     postgresNativeTypesTable,
+    inetPrimaryKeyTable,
     timestampModelTable,
     defaultFunctionsTable,
     minimalModelTable,
