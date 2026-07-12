@@ -130,6 +130,32 @@ generator zero {
 }
 ```
 
+Individual database fields can be selected directly in the Prisma schema with
+documentation comments:
+
+```prisma
+model User {
+  id String @id
+
+  /// @zero.include
+  email String
+
+  /// @zero.exclude
+  passwordHash String
+}
+```
+
+`@zero.exclude` removes a field from the generated client schema. If a model
+contains any `@zero.include` directives, only those fields and fields required
+for primary keys or relations are generated. Directives must be placed in a
+`///` comment immediately above the field; trailing comments are not attached
+to fields by Prisma.
+
+Primary-key and relation fields cannot be excluded. These directives only
+change the generated Zero client schema; they do not prevent PostgreSQL from
+replicating the columns. Configure the upstream publication separately when
+sensitive values must not reach zero-cache.
+
 ## Attribution
 
 Thank you to [@elledienne](https://github.com/elledienne) who built [@passionfroot/prisma-generator-zero](https://github.com/Passionfroot/prisma-generator-zero),

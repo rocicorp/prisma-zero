@@ -366,6 +366,19 @@ model ExcludedModel {
   secret String
 }
 
+/// TEST: Field directives → include allow-list and explicit exclusion
+model FieldDirectives {
+  id String @id @default(uuid())
+
+  /// @zero.include
+  content String?
+
+  internalNote String?
+
+  /// @zero.exclude
+  passwordHash String? @map("password_hash")
+}
+
 // ============================================================================
 // EDGE CASES
 // ============================================================================
