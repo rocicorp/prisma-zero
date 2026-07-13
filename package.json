@@ -1,6 +1,6 @@
 {
   "name": "prisma-zero",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Generate Zero schemas from Prisma ORM schemas",
   "type": "module",
   "scripts": {
@@ -53,7 +53,7 @@
   },
   "devDependencies": {
     "@rocicorp/prettier-config": "^0.4.0",
-    "@rocicorp/zero": "1.7.0",
+    "@rocicorp/zero": "1.8.0",
     "@types/node": "^25.5.0",
     "@types/pg": "^8.20.0",
     "@types/pluralize": "^0.0.33",
