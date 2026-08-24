@@ -279,6 +279,13 @@ export const defaultFunctionsTable = table('DefaultFunctions')
   })
   .primaryKey('id');
 
+export const fieldDirectivesTable = table('FieldDirectives')
+  .columns({
+    id: string(),
+    content: string().optional(),
+  })
+  .primaryKey('id');
+
 export const minimalModelTable = table('MinimalModel')
   .columns({
     id: string(),
@@ -575,6 +582,7 @@ export const schema = createSchema({
     inetPrimaryKeyTable,
     timestampModelTable,
     defaultFunctionsTable,
+    fieldDirectivesTable,
     minimalModelTable,
     reservedWordsTable,
     _articleToTagTable,

@@ -13,6 +13,72 @@ function getTableNameFromModel(model: DMMF.Model): string {
   return model.dbName || model.name;
 }
 
+const hasDirective = (field: DMMF.Field, directive: string): boolean =>
+  field.documentation?.split(/\s+/).includes(directive) ?? false;
+
+function getRequiredFields(
+  model: DMMF.Model,
+  models: readonly DMMF.Model[],
+): Map<string, string | null> {
+  const required = new Map<string, string | null>();
+  const modelNames = new Set(models.map(candidate => candidate.name));
+  const idField = model.fields.find(field => field.isId)?.name;
+
+  for (const field of model.primaryKey?.fields ?? (idField ? [idField] : [])) {
+    required.set(field, null);
+  }
+
+  for (const owner of models) {
+    for (const relation of owner.fields.filter(field => field.relationName)) {
+      if (!modelNames.has(relation.type)) continue;
+
+      if (owner === model) {
+        for (const field of relation.relationFromFields ?? []) {
+          required.set(field, `${owner.name}.${relation.name}`);
+        }
+      }
+      if (relation.type === model.name) {
+        for (const field of relation.relationToFields ?? []) {
+          required.set(field, `${owner.name}.${relation.name}`);
+        }
+      }
+    }
+  }
+
+  return required;
+}
+
+function validateFieldDirectives(models: readonly DMMF.Model[]): void {
+  for (const model of models) {
+    const required = getRequiredFields(model, models);
+
+    for (const field of model.fields) {
+      const included = hasDirective(field, '@zero.include');
+      const excluded = hasDirective(field, '@zero.exclude');
+      if (!included && !excluded) continue;
+
+      if (field.relationName) {
+        throw new Error(
+          `${model.name}.${field.name}: Zero field directives can only be used on database fields, not relation fields.`,
+        );
+      }
+      if (included && excluded) {
+        throw new Error(
+          `${model.name}.${field.name}: @zero.include and @zero.exclude cannot be used together.`,
+        );
+      }
+      if (excluded && required.has(field.name)) {
+        const relation = required.get(field.name);
+        throw new Error(
+          relation
+            ? `${model.name}.${field.name} cannot be excluded because it is used by relation ${relation}.`
+            : `${model.name}.${field.name} cannot be excluded because it is part of the primary key.`,
+        );
+      }
+    }
+  }
+}
+
 /**
  * Get the zero table name from a model name
  * Eg. IssueLabel -> issueLabelTable
@@ -308,8 +374,25 @@ function mapModel(
 ): ZeroModel {
   const columns: Record<string, ZeroTypeMapping> = {};
 
+  const hasIncludes = model.fields.some(field =>
+    hasDirective(field, '@zero.include'),
+  );
+  const requiredFields = getRequiredFields(
+    model,
+    dmmf.datamodel.models.filter(
+      candidate => !config.excludeTables?.includes(candidate.name),
+    ),
+  );
+
   model.fields
     .filter(field => !field.relationName)
+    .filter(
+      field =>
+        !hasDirective(field, '@zero.exclude') &&
+        (!hasIncludes ||
+          hasDirective(field, '@zero.include') ||
+          requiredFields.has(field.name)),
+    )
     .forEach(field => {
       const mapping = mapPrismaTypeToZero(field);
       if (!mapping) {
@@ -365,6 +448,8 @@ export function transformSchema(
   const filteredModels = dmmf.datamodel.models.filter(model => {
     return !config.excludeTables?.includes(model.name);
   });
+
+  validateFieldDirectives(filteredModels);
 
   const models = filteredModels.map(model => mapModel(model, dmmf, config));
 
