@@ -139,6 +139,7 @@ function createImplicitManyToManyModel(
       },
     },
     primaryKey: ['A', 'B'],
+    uniqueKeys: [],
   };
 }
 
@@ -338,6 +339,27 @@ function mapModel(
     );
   }
 
+  const seenKeys = new Set([JSON.stringify(primaryKey)]);
+  const uniqueKeys = [
+    ...model.fields.filter(field => field.isUnique).map(field => [field.name]),
+    ...model.uniqueFields,
+    ...model.uniqueIndexes.map(index => index.fields),
+  ].filter((key): key is [string, ...string[]] => {
+    if (
+      key.length === 0 ||
+      !key.every(fieldName => Object.hasOwn(columns, fieldName))
+    ) {
+      return false;
+    }
+
+    const serializedKey = JSON.stringify(key);
+    if (seenKeys.has(serializedKey)) {
+      return false;
+    }
+    seenKeys.add(serializedKey);
+    return true;
+  });
+
   // Use the Prisma model name (optionally camelCased) for the Zero table name.
   // If the Prisma model is mapped to a different DB table (@@map) or camelCase
   // changes the casing, capture the DB table name in originalTableName so we
@@ -354,6 +376,7 @@ function mapModel(
     columns,
     relationships: mapRelationships(model, dmmf, config),
     primaryKey: ensureStringArray(primaryKey),
+    uniqueKeys,
   };
 }
 

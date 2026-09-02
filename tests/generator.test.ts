@@ -360,6 +360,44 @@ describe('Generator', () => {
         "mediumID: string().from('medium_id').optional()",
       );
     });
+
+    it('generates supported unique keys from complete Prisma metadata', async () => {
+      const membershipModel = createModel(
+        'Membership',
+        [
+          createField('id', 'String', {isId: true}),
+          createField('email', 'String', {
+            isUnique: true,
+            dbName: 'email_address',
+          }),
+          createField('tenantId', 'String', {isRequired: false}),
+          createField('slug', 'String'),
+          createField('payload', 'Bytes'),
+        ],
+        {
+          uniqueFields: [
+            ['slug', 'tenantId'],
+            ['email'],
+            ['id'],
+            ['slug', 'payload'],
+          ],
+          uniqueIndexes: [
+            {name: 'slug_tenant', fields: ['slug', 'tenantId']},
+            {name: 'email_tenant', fields: ['email', 'tenantId']},
+          ],
+        },
+      );
+
+      await onGenerate(createTestOptions(createMockDMMF([membershipModel])));
+
+      const content = getWrittenContent(vi.mocked(fs.writeFile).mock.calls);
+      expect(content).toContain("email: string().from('email_address')");
+      expect(content).toContain(
+        '.primaryKey("id")\n  .unique("email")\n  .unique("slug", "tenantId")\n  .unique("email", "tenantId");',
+      );
+      expect(content).not.toContain('.unique("id")');
+      expect(content).not.toContain('unique("slug", "payload")');
+    });
   });
 
   describe('Many-to-Many Relationships', () => {
