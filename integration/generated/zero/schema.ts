@@ -94,7 +94,8 @@ export const userTable = table('User')
     id: string(),
     email: string(),
   })
-  .primaryKey('id');
+  .primaryKey('id')
+  .unique('email');
 
 export const profileTable = table('Profile')
   .columns({
@@ -102,7 +103,8 @@ export const profileTable = table('Profile')
     bio: string().optional(),
     userId: string(),
   })
-  .primaryKey('id');
+  .primaryKey('id')
+  .unique('userId');
 
 export const postTable = table('Post')
   .columns({
@@ -155,7 +157,8 @@ export const workerSkillTable = table('WorkerSkill')
     workerId: string(),
     skillId: string(),
   })
-  .primaryKey('id');
+  .primaryKey('id')
+  .unique('workerId', 'skillId');
 
 export const categoryTable = table('Category')
   .columns({
@@ -170,7 +173,8 @@ export const socialUserTable = table('SocialUser')
     id: string(),
     username: string(),
   })
-  .primaryKey('id');
+  .primaryKey('id')
+  .unique('username');
 
 export const tenantTable = table('Tenant')
   .columns({
@@ -185,7 +189,8 @@ export const tenantConfigTable = table('TenantConfig')
     settings: json(),
     tenantId: string(),
   })
-  .primaryKey('id');
+  .primaryKey('id')
+  .unique('tenantId');
 
 export const taskTable = table('Task')
   .columns({

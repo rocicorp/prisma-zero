@@ -68,8 +68,37 @@ export const userTable = table('User')
     scores: json<number[]>(),
     categories: json<Category[]>(),
   })
-  .primaryKey('id');
+  .primaryKey('id')
+  .unique('email');
 ```
+
+## Unique Keys
+
+The generator mirrors uniqueness declared in the Prisma schema. Prisma `@unique` and `@@unique` declarations generate corresponding Zero `.unique()` calls, including nullable and mapped fields while preserving the column order of each compound key:
+
+```prisma
+model Membership {
+  id       String @id
+  tenantId String
+  handle   String @unique
+
+  @@unique([tenantId, handle])
+}
+```
+
+```ts
+export const membershipTable = table('Membership')
+  .columns({
+    id: string(),
+    tenantId: string(),
+    handle: string(),
+  })
+  .primaryKey('id')
+  .unique('handle')
+  .unique('tenantId', 'handle');
+```
+
+These `.unique()` declarations describe constraints that already exist; they do not create or migrate database constraints. Generated unique keys require `@rocicorp/zero` 1.10 or newer.
 
 ## Postgres Time Support
 
