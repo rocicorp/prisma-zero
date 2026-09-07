@@ -197,6 +197,32 @@ CREATE TABLE "TenantConfig" (
 );
 
 -- CreateTable
+CREATE TABLE "Org" (
+    "id" TEXT NOT NULL,
+    "region" TEXT NOT NULL,
+
+    CONSTRAINT "Org_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "OrgMember" (
+    "id" TEXT NOT NULL,
+    "region" TEXT NOT NULL,
+    "orgId" TEXT NOT NULL,
+
+    CONSTRAINT "OrgMember_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "TreeNode" (
+    "id" TEXT NOT NULL,
+    "ownerId" TEXT NOT NULL,
+    "parentId" TEXT,
+
+    CONSTRAINT "TreeNode_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Task" (
     "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
@@ -353,6 +379,12 @@ CREATE UNIQUE INDEX "SocialUser_username_key" ON "SocialUser"("username");
 CREATE UNIQUE INDEX "TenantConfig_tenantId_key" ON "TenantConfig"("tenantId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Org_region_id_key" ON "Org"("region", "id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "TreeNode_ownerId_id_key" ON "TreeNode"("ownerId", "id");
+
+-- CreateIndex
 CREATE INDEX "_ArticleToTag_B_index" ON "_ArticleToTag"("B");
 
 -- CreateIndex
@@ -378,6 +410,12 @@ ALTER TABLE "Category" ADD CONSTRAINT "Category_parentId_fkey" FOREIGN KEY ("par
 
 -- AddForeignKey
 ALTER TABLE "TenantConfig" ADD CONSTRAINT "TenantConfig_tenantId_fkey" FOREIGN KEY ("tenantId") REFERENCES "Tenant"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "OrgMember" ADD CONSTRAINT "OrgMember_region_orgId_fkey" FOREIGN KEY ("region", "orgId") REFERENCES "Org"("region", "id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "TreeNode" ADD CONSTRAINT "TreeNode_ownerId_parentId_fkey" FOREIGN KEY ("ownerId", "parentId") REFERENCES "TreeNode"("ownerId", "id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Task" ADD CONSTRAINT "Task_creatorId_fkey" FOREIGN KEY ("creatorId") REFERENCES "Member"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
