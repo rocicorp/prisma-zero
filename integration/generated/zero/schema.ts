@@ -187,6 +187,29 @@ export const tenantConfigTable = table('TenantConfig')
   })
   .primaryKey('id');
 
+export const orgTable = table('Org')
+  .columns({
+    id: string(),
+    region: string(),
+  })
+  .primaryKey('id');
+
+export const orgMemberTable = table('OrgMember')
+  .columns({
+    id: string(),
+    region: string(),
+    orgId: string(),
+  })
+  .primaryKey('id');
+
+export const treeNodeTable = table('TreeNode')
+  .columns({
+    id: string(),
+    ownerId: string(),
+    parentId: string().optional(),
+  })
+  .primaryKey('id');
+
 export const taskTable = table('Task')
   .columns({
     id: string(),
@@ -484,6 +507,38 @@ export const tenantConfigTableRelationships = relationships(
     }),
   }),
 );
+export const orgTableRelationships = relationships(orgTable, ({many}) => ({
+  members: many({
+    sourceField: ['region', 'id'],
+    destField: ['region', 'orgId'],
+    destSchema: orgMemberTable,
+  }),
+}));
+export const orgMemberTableRelationships = relationships(
+  orgMemberTable,
+  ({one}) => ({
+    org: one({
+      sourceField: ['region', 'orgId'],
+      destField: ['region', 'id'],
+      destSchema: orgTable,
+    }),
+  }),
+);
+export const treeNodeTableRelationships = relationships(
+  treeNodeTable,
+  ({one, many}) => ({
+    parent: one({
+      sourceField: ['ownerId', 'parentId'],
+      destField: ['ownerId', 'id'],
+      destSchema: treeNodeTable,
+    }),
+    children: many({
+      sourceField: ['ownerId', 'id'],
+      destField: ['ownerId', 'parentId'],
+      destSchema: treeNodeTable,
+    }),
+  }),
+);
 export const taskTableRelationships = relationships(taskTable, ({one}) => ({
   creator: one({
     sourceField: ['creatorId'],
@@ -567,6 +622,9 @@ export const schema = createSchema({
     socialUserTable,
     tenantTable,
     tenantConfigTable,
+    orgTable,
+    orgMemberTable,
+    treeNodeTable,
     taskTable,
     memberTable,
     enumFieldsTable,
@@ -594,6 +652,9 @@ export const schema = createSchema({
     socialUserTableRelationships,
     tenantTableRelationships,
     tenantConfigTableRelationships,
+    orgTableRelationships,
+    orgMemberTableRelationships,
+    treeNodeTableRelationships,
     taskTableRelationships,
     memberTableRelationships,
     _articleToTagTableRelationships,

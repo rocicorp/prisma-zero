@@ -703,6 +703,43 @@ describe('Schema Mapper', () => {
       });
     });
 
+    it('joins the list side on a single non-primary unique field', () => {
+      const authorModel = createModel('Author', [
+        createField('id', 'String', {isId: true}),
+        createField('slug', 'String', {isUnique: true}),
+        createField('posts', 'Post', {
+          isList: true,
+          relationName: 'AuthorToPost',
+          kind: 'object',
+        }),
+      ]);
+
+      const postModel = createModel('Post', [
+        createField('id', 'String', {isId: true}),
+        createField('authorSlug', 'String'),
+        createField('author', 'Author', {
+          relationName: 'AuthorToPost',
+          kind: 'object',
+          relationFromFields: ['authorSlug'],
+          relationToFields: ['slug'],
+        }),
+      ]);
+
+      const result = transformSchema(
+        createMockDMMF([authorModel, postModel]),
+        baseConfig,
+      );
+
+      expect(
+        result.models.find(m => m.modelName === 'Author')?.relationships.posts,
+      ).toEqual({
+        sourceField: ['slug'],
+        destField: ['authorSlug'],
+        destSchema: 'postTable',
+        type: 'many',
+      });
+    });
+
     it('should correctly map one-to-many relationship with composite key on parent', () => {
       const parentModel = createModel(
         'Parent',
@@ -772,6 +809,92 @@ describe('Schema Mapper', () => {
         expect(childrenRelationship).toHaveProperty('destField');
         expect(childrenRelationship).toHaveProperty('destSchema');
       }
+    });
+
+    it('joins the list side on the referenced columns, not the primary key', () => {
+      const orgModel = createModel(
+        'Org',
+        [
+          createField('id', 'String', {isId: true}),
+          createField('region', 'String'),
+          createField('members', 'OrgMember', {
+            isList: true,
+            relationName: 'OrgToMember',
+            kind: 'object',
+          }),
+        ],
+        {uniqueFields: [['region', 'id']]},
+      );
+
+      const memberModel = createModel('OrgMember', [
+        createField('id', 'String', {isId: true}),
+        createField('region', 'String'),
+        createField('orgId', 'String'),
+        createField('org', 'Org', {
+          relationName: 'OrgToMember',
+          kind: 'object',
+          relationFromFields: ['region', 'orgId'],
+          relationToFields: ['region', 'id'],
+        }),
+      ]);
+
+      const dmmf = createMockDMMF([orgModel, memberModel]);
+      const result = transformSchema(dmmf, baseConfig);
+
+      // `region, id` is a @@unique, not the primary key. Joining on the primary
+      // key instead pairs a one-field sourceField with a two-field destField,
+      // which Zero rejects.
+      expect(
+        result.models.find(m => m.modelName === 'Org')?.relationships.members,
+      ).toEqual({
+        sourceField: ['region', 'id'],
+        destField: ['region', 'orgId'],
+        destSchema: 'orgMemberTable',
+        type: 'many',
+      });
+    });
+
+    it('maps self-referential multi-column foreign keys on both sides', () => {
+      const treeNodeModel = createModel(
+        'TreeNode',
+        [
+          createField('id', 'String', {isId: true}),
+          createField('ownerId', 'String'),
+          createField('parentId', 'String', {isRequired: false}),
+          createField('parent', 'TreeNode', {
+            isRequired: false,
+            relationName: 'TreeNodeHierarchy',
+            kind: 'object',
+            relationFromFields: ['ownerId', 'parentId'],
+            relationToFields: ['ownerId', 'id'],
+          }),
+          createField('children', 'TreeNode', {
+            isList: true,
+            relationName: 'TreeNodeHierarchy',
+            kind: 'object',
+          }),
+        ],
+        {uniqueFields: [['ownerId', 'id']]},
+      );
+
+      const dmmf = createMockDMMF([treeNodeModel]);
+      const result = transformSchema(dmmf, baseConfig);
+      const relationships = result.models.find(
+        m => m.modelName === 'TreeNode',
+      )?.relationships;
+
+      expect(relationships?.parent).toEqual({
+        sourceField: ['ownerId', 'parentId'],
+        destField: ['ownerId', 'id'],
+        destSchema: 'treeNodeTable',
+        type: 'one',
+      });
+      expect(relationships?.children).toEqual({
+        sourceField: ['ownerId', 'id'],
+        destField: ['ownerId', 'parentId'],
+        destSchema: 'treeNodeTable',
+        type: 'many',
+      });
     });
 
     it('maps self-referential implicit many-to-many relationships to distinct join columns', () => {

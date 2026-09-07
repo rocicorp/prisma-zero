@@ -247,6 +247,36 @@ model TenantConfig {
   tenant   Tenant @relation(fields: [tenantId], references: [id])
 }
 
+/// TEST: Multi-column FK referencing a @@unique rather than the primary key
+/// → the list side joins on the referenced columns, not on the primary key
+model Org {
+  id      String      @id @default(uuid())
+  region  String
+  members OrgMember[]
+
+  @@unique([region, id])
+}
+
+/// TEST: Owning side of a multi-column FK
+model OrgMember {
+  id     String @id @default(uuid())
+  region String
+  orgId  String
+  org    Org    @relation(fields: [region, orgId], references: [region, id])
+}
+
+/// TEST: Self-referential multi-column FK (parent/children tree scoped by owner)
+model TreeNode {
+  id       String  @id @default(uuid())
+  ownerId  String
+  parentId String?
+
+  parent   TreeNode?  @relation("TreeNodeHierarchy", fields: [ownerId, parentId], references: [ownerId, id])
+  children TreeNode[] @relation("TreeNodeHierarchy")
+
+  @@unique([ownerId, id])
+}
+
 // ============================================================================
 // RELATIONSHIPS - Multiple relations to same model
 // ============================================================================

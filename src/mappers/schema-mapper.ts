@@ -242,11 +242,16 @@ function mapRelationships(
           };
         } else {
           // Regular one-to-many relationship
-          // Use primaryKey fields first (for @@id), fallback to isId field (for @id)
+          // The list side starts from the fields referenced by the singular
+          // side, which may be a unique key rather than the primary key.
           const idField = model.fields.find(f => f.isId)?.name;
           const primaryKeyFields =
             model.primaryKey?.fields || (idField ? [idField] : []);
-          const sourceFields = ensureStringArray(primaryKeyFields);
+          const sourceFields = ensureStringArray(
+            backReference?.relationToFields?.length
+              ? backReference.relationToFields
+              : primaryKeyFields,
+          );
           const destFields = backReference?.relationFromFields
             ? ensureStringArray(backReference.relationFromFields)
             : [];
