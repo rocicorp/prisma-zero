@@ -490,6 +490,124 @@ describe('Schema Mapper', () => {
     });
   });
 
+  describe('field directives', () => {
+    it('includes and excludes scalar fields while preserving required fields', () => {
+      const user = createModel('User', [
+        createField('id', 'String', {isId: true}),
+        createField('email', 'String', {
+          documentation: 'Public address.\n@zero.include',
+          isRequired: false,
+          dbName: 'email_address',
+        }),
+        createField('name', 'String'),
+        createField('passwordHash', 'String', {
+          documentation: '@zero.exclude',
+        }),
+      ]);
+
+      const result = transformSchema(createMockDMMF([user]), baseConfig);
+
+      expect(Object.keys(result.models[0]?.columns ?? {})).toEqual([
+        'id',
+        'email',
+      ]);
+      expect(result.models[0]?.columns.email).toMatchObject({
+        isOptional: true,
+        mappedName: 'email_address',
+      });
+    });
+
+    it('rejects conflicting directives', () => {
+      const user = createModel('User', [
+        createField('id', 'String', {isId: true}),
+        createField('name', 'String', {
+          documentation: '@zero.include @zero.exclude',
+        }),
+      ]);
+
+      expect(() => transformSchema(createMockDMMF([user]), baseConfig)).toThrow(
+        'User.name: @zero.include and @zero.exclude cannot be used together',
+      );
+    });
+
+    it('does not retain relation fields for excluded tables', () => {
+      const user = createModel('User', [
+        createField('id', 'String', {isId: true}),
+      ]);
+      const post = createModel('Post', [
+        createField('id', 'String', {isId: true}),
+        createField('title', 'String', {documentation: '@zero.include'}),
+        createField('authorId', 'String'),
+        createField('author', 'User', {
+          kind: 'object',
+          relationName: 'PostAuthor',
+          relationFromFields: ['authorId'],
+          relationToFields: ['id'],
+        }),
+      ]);
+
+      const result = transformSchema(createMockDMMF([user, post]), {
+        ...baseConfig,
+        excludeTables: ['User'],
+      });
+
+      expect(Object.keys(result.models[0]?.columns ?? {})).toEqual([
+        'id',
+        'title',
+      ]);
+    });
+
+    it('rejects excluded primary keys and relation fields', () => {
+      const invalidPrimaryKey = createModel('User', [
+        createField('id', 'String', {
+          isId: true,
+          documentation: '@zero.exclude',
+        }),
+      ]);
+      expect(() =>
+        transformSchema(createMockDMMF([invalidPrimaryKey]), baseConfig),
+      ).toThrow(
+        'User.id cannot be excluded because it is part of the primary key',
+      );
+
+      const invalidRelation = createModel('Post', [
+        createField('id', 'String', {isId: true}),
+        createField('author', 'User', {
+          kind: 'object',
+          relationName: 'PostAuthor',
+          documentation: '@zero.exclude',
+        }),
+      ]);
+      expect(() =>
+        transformSchema(createMockDMMF([invalidRelation]), baseConfig),
+      ).toThrow(
+        'Post.author: Zero field directives can only be used on database fields',
+      );
+    });
+
+    it('rejects excluded foreign keys with the relation name', () => {
+      const user = createModel('User', [
+        createField('id', 'String', {isId: true}),
+      ]);
+      const post = createModel('Post', [
+        createField('id', 'String', {isId: true}),
+        createField('authorId', 'String', {documentation: '@zero.exclude'}),
+        createField('author', 'User', {
+          kind: 'object',
+          relationName: 'PostAuthor',
+          relationFromFields: ['authorId'],
+          relationToFields: ['id'],
+        }),
+      ]);
+
+      expect(() =>
+        transformSchema(createMockDMMF([user, post]), baseConfig),
+      ).toThrow(
+        'Post.authorId cannot be excluded because it is used by relation Post.author',
+      );
+    });
+  });
+
   describe('camelCase', () => {
     it('should not remap table names when camelCase is false', () => {
       const model = createModel('UserProfile', [
