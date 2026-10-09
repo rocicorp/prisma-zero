@@ -95,7 +95,11 @@ function generateModelSchema(model: ZeroModel): string {
   output += '  })';
 
   // Add primary key
-  output += `\n  .primaryKey(${model.primaryKey.map(key => `"${key}"`).join(', ')});\n\n`;
+  output += `\n  .primaryKey(${model.primaryKey.map(key => `"${key}"`).join(', ')})`;
+  model.uniqueKeys.forEach(uniqueKey => {
+    output += `\n  .unique(${uniqueKey.map(key => `"${key}"`).join(', ')})`;
+  });
+  output += ';\n\n';
   return output;
 }
 

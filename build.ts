@@ -14,7 +14,7 @@ const main = async () => {
         ignoreDeprecations: '6.0',
       },
     },
-    target: 'node16',
+    target: 'node22',
     platform: 'node',
     external: [
       'esbuild',

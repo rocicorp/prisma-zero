@@ -25,6 +25,7 @@ describe('code generator', () => {
           },
           relationships: undefined as any,
           primaryKey: ['id'],
+          uniqueKeys: [],
         },
       ],
     };
@@ -72,6 +73,7 @@ describe('code generator', () => {
             },
           },
           primaryKey: ['id'],
+          uniqueKeys: [],
         },
         {
           tableName: 'Plain',
@@ -83,6 +85,7 @@ describe('code generator', () => {
           },
           relationships: {},
           primaryKey: ['id'],
+          uniqueKeys: [],
         },
       ],
     };
@@ -107,6 +110,7 @@ describe('code generator', () => {
           },
           relationships: {},
           primaryKey: ['id'],
+          uniqueKeys: [],
         },
       ],
     };
@@ -133,6 +137,7 @@ describe('code generator', () => {
           },
           relationships: {},
           primaryKey: ['id'],
+          uniqueKeys: [],
         },
       ],
     };
@@ -158,6 +163,7 @@ describe('code generator', () => {
           },
           relationships: {},
           primaryKey: ['id'],
+          uniqueKeys: [],
         },
       ],
     };
@@ -182,6 +188,7 @@ describe('code generator', () => {
           },
           relationships: {},
           primaryKey: ['id'],
+          uniqueKeys: [],
         },
       ],
     };
@@ -206,6 +213,7 @@ describe('code generator', () => {
           },
           relationships: {},
           primaryKey: ['id'],
+          uniqueKeys: [],
         },
       ],
     };
@@ -232,6 +240,7 @@ describe('code generator', () => {
           },
           relationships: {},
           primaryKey: ['id'],
+          uniqueKeys: [],
         },
       ],
     };
@@ -258,6 +267,7 @@ describe('code generator', () => {
           },
           relationships: {},
           primaryKey: ['id'],
+          uniqueKeys: [],
         },
       ],
     };
@@ -270,5 +280,35 @@ describe('code generator', () => {
 
     expect(output).toContain('enableLegacyMutators: true');
     expect(output).toContain('enableLegacyQueries: true');
+  });
+
+  it('chains unique keys after the primary key with one final semicolon', () => {
+    const schema: TransformedSchema = {
+      enums: [],
+      models: [
+        {
+          tableName: 'Membership',
+          originalTableName: null,
+          modelName: 'Membership',
+          zeroTableName: 'membershipTable',
+          columns: {
+            id: {type: 'string()', isOptional: false, mappedName: null},
+            email: {type: 'string()', isOptional: false, mappedName: null},
+            tenantId: {type: 'string()', isOptional: false, mappedName: null},
+            slug: {type: 'string()', isOptional: false, mappedName: null},
+          },
+          relationships: {},
+          primaryKey: ['id'],
+          uniqueKeys: [['email'], ['slug', 'tenantId']],
+        },
+      ],
+    };
+
+    const output = generateCode(schema, defaultConfig);
+
+    expect(output).toContain(
+      '.primaryKey("id")\n  .unique("email")\n  .unique("slug", "tenantId");',
+    );
+    expect(output).not.toMatch(/^\s+unique,$/m);
   });
 });

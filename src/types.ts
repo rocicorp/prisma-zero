@@ -45,6 +45,7 @@ export type ZeroModel = {
   columns: Record<string, ZeroTypeMapping>;
   relationships: Record<string, ZeroRelationship>;
   primaryKey: string[];
+  uniqueKeys: [string, ...string[]][];
 };
 
 export type TransformedSchema = {

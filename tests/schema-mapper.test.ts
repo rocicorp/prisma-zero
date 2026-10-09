@@ -389,6 +389,52 @@ describe('Schema Mapper', () => {
     });
   });
 
+  describe('unique keys', () => {
+    it('maps supported Prisma uniqueness metadata without duplicates', () => {
+      const model = createModel(
+        'Membership',
+        [
+          createField('id', 'String', {isId: true}),
+          createField('email', 'String', {
+            isUnique: true,
+            dbName: 'email_address',
+          }),
+          createField('nickname', 'String', {
+            isRequired: false,
+            isUnique: true,
+          }),
+          createField('first', 'String'),
+          createField('second', 'String'),
+          createField('payload', 'Bytes', {isUnique: true}),
+        ],
+        {
+          uniqueFields: [
+            ['second', 'first'],
+            ['email'],
+            ['id'],
+            ['email', 'first'],
+            ['first', 'missing'],
+            ['payload', 'first'],
+          ],
+          uniqueIndexes: [
+            {name: 'second_first_unique', fields: ['second', 'first']},
+            {name: 'named_unique', fields: ['first', 'email']},
+          ],
+        },
+      );
+
+      const result = transformSchema(createMockDMMF([model]), baseConfig);
+
+      expect(result.models[0]?.uniqueKeys).toEqual([
+        ['email'],
+        ['nickname'],
+        ['second', 'first'],
+        ['email', 'first'],
+        ['first', 'email'],
+      ]);
+    });
+  });
+
   describe('excludeTables', () => {
     it('should exclude specified tables from the schema', () => {
       const models = [
@@ -666,6 +712,7 @@ describe('Schema Mapper', () => {
       if (joinTable) {
         expect(joinTable.tableName).toBe('_postToCategory');
         expect(joinTable.originalTableName).toBe('_PostToCategory');
+        expect(joinTable.uniqueKeys).toEqual([]);
       }
     });
   });
