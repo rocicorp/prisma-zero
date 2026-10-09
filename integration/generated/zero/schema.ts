@@ -197,7 +197,8 @@ export const orgTable = table('Org')
     id: string(),
     region: string(),
   })
-  .primaryKey('id');
+  .primaryKey('id')
+  .unique('region', 'id');
 
 export const orgMemberTable = table('OrgMember')
   .columns({
@@ -213,7 +214,8 @@ export const treeNodeTable = table('TreeNode')
     ownerId: string(),
     parentId: string().optional(),
   })
-  .primaryKey('id');
+  .primaryKey('id')
+  .unique('ownerId', 'id');
 
 export const taskTable = table('Task')
   .columns({
